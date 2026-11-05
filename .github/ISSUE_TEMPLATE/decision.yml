@@ -1,0 +1,29 @@
+name: Decision
+description: A choice that needs recording, such as a roadmap "Decide first" item.
+title: "Decision: "
+labels: ["decision"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What needs deciding, and why now.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options
+      description: The realistic options and their trade-offs.
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision
+      description: What was chosen and why. Leave empty until it is decided.
+  - type: input
+    id: adr
+    attributes:
+      label: ADR
+      description: Link to the ADR, if this decision has one.
