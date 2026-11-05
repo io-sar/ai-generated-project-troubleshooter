@@ -17,6 +17,14 @@ This repo follows [Gitflow](https://www.atlassian.com/git/tutorials/comparing-wo
 - Write commit messages in the plain imperative: `Add risk score calculation`.
 - Keep the `Co-Authored-By: Claude` line on commits made by Claude.
 
+## Issues and the board
+- Track work as issues on the public GitHub Project board, using the task, risk and decision templates in `.github/ISSUE_TEMPLATE`.
+- Each milestone has about 5 to 10 issues, and each issue belongs to a GitHub milestone.
+- Use real data only. Never backdate or invent progress, risks or decisions.
+- Pull requests list their issues with `Refs #n`. Closing keywords only work on the default branch (`main`), so close issues by hand once the pull request reaches `develop`.
+- Ask for approval before creating, editing or closing issues. Show the text first.
+- Risk ratings, status updates and retrospectives are the author's judgment. Claude only drafts them.
+
 ## Author's work
 Never write these, because they must be the author's own judgment:
 

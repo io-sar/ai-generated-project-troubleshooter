@@ -4,6 +4,8 @@ A public web app that assesses a troubled project and produces a recovery pack: 
 
 **Current status:** requirements reviewed and planned. Next up: M0.
 
+**Live tracking:** work, risks and decisions are on the [project board](https://github.com/users/io-sar/projects/5).
+
 The first release is a public demo that needs no setup. The second adds analysis of your own project using your own API key. This is a working plan and is expected to change.
 
 ## Overview
