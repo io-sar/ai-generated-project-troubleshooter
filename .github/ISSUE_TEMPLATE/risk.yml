@@ -1,0 +1,49 @@
+name: Risk
+description: A delivery risk, using the same fields as the app's risk register.
+title: "Risk: "
+labels: ["risk"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What could go wrong, and what it would affect.
+    validations:
+      required: true
+  - type: dropdown
+    id: likelihood
+    attributes:
+      label: Likelihood
+      description: 1 is very unlikely, 5 is very likely.
+      options: ["1", "2", "3", "4", "5"]
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: 1 is minor, 5 is severe.
+      options: ["1", "2", "3", "4", "5"]
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Owner
+      description: The role responsible for this risk.
+    validations:
+      required: true
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Mitigation
+      description: What reduces the likelihood or the impact.
+    validations:
+      required: true
+  - type: dropdown
+    id: escalation
+    attributes:
+      label: Escalation level
+      options: ["Team", "PM", "Sponsor", "Steering"]
+    validations:
+      required: true

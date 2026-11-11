@@ -1,0 +1,27 @@
+name: Task
+description: A piece of planned work from the roadmap.
+labels: ["task"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What this task delivers and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: done_when
+    attributes:
+      label: Done when
+      description: Checks that prove the task is finished. Include the tests.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: roadmap
+    attributes:
+      label: Roadmap item
+      description: The milestone and line in ROADMAP.md, for example "M0, GitHub Actions CI".
+    validations:
+      required: true
