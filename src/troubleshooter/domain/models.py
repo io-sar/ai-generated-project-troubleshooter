@@ -1,5 +1,8 @@
 """The report schema that every engine returns.
 
+Model docstrings become schema descriptions that the LLM reads, so they describe the data
+only. Notes for developers go in comments.
+
 Models are frozen, so only `ui/state.py` changes a report, by making an updated copy.
 Unknown fields are rejected, so LLM output can't carry extra data past validation.
 Derived values (labels, overall rating, risk score) are calculated in `scoring`, not stored.
@@ -116,12 +119,10 @@ class RaciAssignment(DomainModel):
 
 
 class RaciRow(DomainModel):
-    """One activity. Roles left out have no part in it.
+    """One activity. Roles left out have no part in it."""
 
-    The one-A rule is checked in `raci`, not here, because a broken row must still load
-    so the app can show a warning instead of rejecting the report.
-    """
-
+    # The one-A rule is checked in `raci`, not here, because a broken row must still load
+    # so the app can show a warning instead of rejecting the report.
     activity: Text
     assignments: list[RaciAssignment]
 
