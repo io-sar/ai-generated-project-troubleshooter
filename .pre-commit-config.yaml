@@ -1,0 +1,57 @@
+# Runs before each commit. Install once with: uv run pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # Blocks any commit that contains something that looks like a key or token.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Keeps uv.lock and the requirements.txt used by Streamlit Cloud in step with pyproject.toml.
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.13.7
+    hooks:
+      - id: uv-lock
+      - id: uv-export
+        args: [--format=requirements-txt, --no-dev, --no-hashes, --output-file=requirements.txt]
+
+  # Local hooks run the versions pinned in uv.lock, so they match CI exactly.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: import-linter
+        name: import-linter
+        entry: uv run lint-imports
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -q
+        language: system
+        types: [python]
+        pass_filenames: false

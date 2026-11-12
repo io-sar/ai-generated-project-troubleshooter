@@ -1,0 +1,11 @@
+# Streamlit settings shared by local runs and Streamlit Community Cloud.
+# Secrets go in .streamlit/secrets.toml, which is gitignored.
+
+[client]
+# No stack trace or exception text reaches visitors. Errors are shown through our own messages.
+showErrorDetails = "none"
+# Visitors see the viewer menu only, without developer options.
+toolbarMode = "viewer"
+
+[browser]
+gatherUsageStats = false
