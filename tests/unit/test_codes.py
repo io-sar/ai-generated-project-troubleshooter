@@ -7,11 +7,13 @@ from troubleshooter.domain.codes import (
     EscalationLevel,
     HealthLabel,
     InputClassification,
+    ProjectType,
     RaciCode,
 )
 
 # Codes are a stored format: recorded samples depend on these exact strings.
 EXPECTED_CODES: dict[type[StrEnum], list[str]] = {
+    ProjectType: ["software_delivery", "ai_implementation", "service_migration", "product_launch"],
     Dimension: ["schedule", "scope", "quality", "risk_control", "stakeholder_confidence"],
     HealthLabel: ["good", "problematic", "at_risk"],
     EscalationLevel: ["team", "pm", "sponsor", "steering"],

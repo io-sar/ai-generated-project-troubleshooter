@@ -7,6 +7,13 @@ translated only for display, so a code must never change once samples are record
 from enum import StrEnum
 
 
+class ProjectType(StrEnum):
+    SOFTWARE_DELIVERY = "software_delivery"
+    AI_IMPLEMENTATION = "ai_implementation"
+    SERVICE_MIGRATION = "service_migration"
+    PRODUCT_LAUNCH = "product_launch"
+
+
 class Dimension(StrEnum):
     SCHEDULE = "schedule"
     SCOPE = "scope"
