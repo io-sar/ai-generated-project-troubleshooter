@@ -1,11 +1,11 @@
-"""Health scoring rules, decided in issue #14 and recorded in ADR 0001.
+"""Health and risk scoring rules, decided in issue #14 and recorded in ADR 0001.
 
-Scores run 0-100 and higher is always healthier. These are pure functions, so the overall
-rating recalculates whenever a score changes.
+Health scores run 0-100 and higher is always healthier. These are pure functions, so the
+overall rating and risk scores recalculate whenever an input changes.
 """
 
-from troubleshooter.domain.codes import Dimension, HealthLabel
-from troubleshooter.domain.models import HealthScores
+from troubleshooter.domain.codes import Dimension, EscalationLevel, HealthLabel
+from troubleshooter.domain.models import HealthScores, Risk
 
 GOOD_MIN_SCORE = 70
 PROBLEMATIC_MIN_SCORE = 40
@@ -16,6 +16,14 @@ LABEL_SCORES: dict[HealthLabel, int] = {
     HealthLabel.PROBLEMATIC: 55,
     HealthLabel.AT_RISK: 25,
 }
+
+# Lowest risk score for each level, highest first. Follows the common 5x5 matrix split.
+ESCALATION_MIN_SCORES: tuple[tuple[int, EscalationLevel], ...] = (
+    (17, EscalationLevel.STEERING),
+    (10, EscalationLevel.SPONSOR),
+    (5, EscalationLevel.PM),
+    (1, EscalationLevel.TEAM),
+)
 
 
 def label_for(score: int) -> HealthLabel:
@@ -55,3 +63,16 @@ def overall_label(health: HealthScores) -> HealthLabel:
     if label is HealthLabel.GOOD and has_at_risk:
         return HealthLabel.PROBLEMATIC
     return label
+
+
+def risk_score(risk: Risk) -> int:
+    """Likelihood x impact, from 1 to 25."""
+    return risk.likelihood * risk.impact
+
+
+def suggested_escalation(score: int) -> EscalationLevel:
+    """The level a risk score suggests. People may still edit a risk's level."""
+    for min_score, level in ESCALATION_MIN_SCORES:
+        if score >= min_score:
+            return level
+    raise ValueError(f"Risk score must be at least 1, got {score}")
