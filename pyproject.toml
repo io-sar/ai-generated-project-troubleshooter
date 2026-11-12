@@ -6,6 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
+    "pydantic>=2.14.3",
     "streamlit>=1.67.0",
 ]
 
@@ -40,6 +41,12 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "S", "RUF"]
 [tool.mypy]
 strict = true
 files = ["src", "tests", "app_pages", "streamlit_app.py"]
+# Type-checks Pydantic model constructors and flags writes to frozen models.
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
 
 # Enforces the one-way module dependencies set out in CLAUDE.md. Run with: uv run lint-imports
 [tool.importlinter]

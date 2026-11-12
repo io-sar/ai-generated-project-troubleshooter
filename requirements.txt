@@ -3,6 +3,8 @@
 -e .
 altair==6.3.0
     # via streamlit
+annotated-types==0.8.0
+    # via pydantic
 anyio==4.16.0
     # via
     #   starlette
@@ -56,6 +58,10 @@ protobuf==7.36.2
     # via streamlit
 pyarrow==26.0.1
     # via streamlit
+pydantic==2.14.3
+    # via ai-project-troubleshooter
+pydantic-core==2.50.4
+    # via pydantic
 pydeck==0.9.3
     # via streamlit
 python-dateutil==4.0.0
@@ -80,7 +86,12 @@ typing-extensions==4.16.0
     # via
     #   altair
     #   anyio
+    #   pydantic
+    #   pydantic-core
     #   streamlit
+    #   typing-inspection
+typing-inspection==0.4.5
+    # via pydantic
 tzdata==2026.6
     # via
     #   pandas
