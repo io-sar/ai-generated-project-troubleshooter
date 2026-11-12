@@ -17,7 +17,8 @@ jobs:
       - uses: actions/checkout@v7
 
       # Installs uv and the Python version in .python-version.
-      - uses: astral-sh/setup-uv@v10
+      # setup-uv publishes exact tags only, with no moving major tag.
+      - uses: astral-sh/setup-uv@v10.3.3
 
       # --locked fails if uv.lock is out of step with pyproject.toml.
       - name: Install dependencies
