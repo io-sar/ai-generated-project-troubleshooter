@@ -5,7 +5,9 @@ description = "Assesses a troubled project and produces a recovery pack."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "streamlit>=1.67.0",
+]
 
 [dependency-groups]
 dev = [
@@ -37,7 +39,7 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "S", "RUF"]
 
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "app_pages", "streamlit_app.py"]
 
 # Enforces the one-way module dependencies set out in CLAUDE.md. Run with: uv run lint-imports
 [tool.importlinter]
