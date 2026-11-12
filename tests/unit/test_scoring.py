@@ -44,7 +44,7 @@ def test_label_score_sits_inside_its_own_band(label: HealthLabel) -> None:
 
 
 def test_label_scores_match_the_decision() -> None:
-    assert [score_for(label) for label in (GOOD, PROBLEMATIC, AT_RISK)] == [85, 55, 25]
+    assert [score_for(label) for label in (GOOD, PROBLEMATIC, AT_RISK)] == [85, 55, 15]
 
 
 def test_dimension_codes_match_health_score_fields() -> None:
@@ -118,5 +118,5 @@ def test_overall_recalculates_after_a_label_override() -> None:
     override = DimensionHealth(score=score_for(AT_RISK), rationale="Two outages this week.")
     overridden = health.model_copy(update={"quality": override})
 
-    assert overall_score(overridden) == 77  # (90 * 4 + 25) / 5
-    assert overall_label(overridden) is PROBLEMATIC
+    assert overall_score(overridden) == 75  # (90 * 4 + 15) / 5
+    assert overall_label(overridden) is PROBLEMATIC  # 75 alone is Good; the red cap applies

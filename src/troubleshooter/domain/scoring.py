@@ -11,10 +11,11 @@ GOOD_MIN_SCORE = 70
 PROBLEMATIC_MIN_SCORE = 40
 
 # The score a dimension takes when a person overrides its label. Each sits inside its band.
+# At Risk sits low in its band on purpose, so an At Risk override weighs on the overall.
 LABEL_SCORES: dict[HealthLabel, int] = {
     HealthLabel.GOOD: 85,
     HealthLabel.PROBLEMATIC: 55,
-    HealthLabel.AT_RISK: 25,
+    HealthLabel.AT_RISK: 15,
 }
 
 # Lowest risk score for each level, highest first. Follows the common 5x5 matrix split.
