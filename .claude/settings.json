@@ -20,7 +20,8 @@
       "Bash(uv run ruff format *)",
       "Bash(uv run mypy)",
       "Bash(uv run mypy *)",
-      "Bash(uv run lint-imports)"
+      "Bash(uv run lint-imports)",
+      "Bash(uv run lint-imports *)"
     ]
   },
   "hooks": {

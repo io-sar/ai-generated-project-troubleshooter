@@ -88,11 +88,11 @@ Scenario text can be drafted by AI. The author reviews all Greek UI text.
 ## Writing
 Repo docs are public. Write them for outside readers, in plain language.
 
-<!-- project-init:start v0.4.1 2026-11-17 -->
+<!-- project-init:start v0.5.0 2026-11-17 -->
 ## Project standards
 
 ### Project profile
-Stage: MVP · Data: none stored · Interfaces: web UI · Growth: stays small · Regulation: none confirmed (GDPR, EU AI Act, EAA open) · Team: solo · Architecture: modular monolith · AI: uses LLMs
+Stage: MVP · Data: none stored · Interfaces: web UI · Growth: stays small · Regulation: none confirmed (GDPR, EU AI Act, EAA open) · Team: solo · Architecture: modular monolith · AI: uses LLMs · Hosting: Streamlit Community Cloud
 
 ### Commands
 | Task | Command |
@@ -105,7 +105,7 @@ Stage: MVP · Data: none stored · Interfaces: web UI · Growth: stays small · 
 | Import contracts | `uv run lint-imports` |
 
 ### Non-negotiables
-- Run the tests and all checks before finishing. Never delete, skip or weaken a test to make it pass.
+- Never delete, skip or weaken a test to make it pass.
 - Never read `.env`, key or credential files.
 - For changes touching several files or the architecture, propose a plan first and wait for agreement.
 - When editing existing code, follow the patterns already in that module unless a rule says otherwise.
