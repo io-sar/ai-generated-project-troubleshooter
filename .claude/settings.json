@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./.streamlit/secrets.toml)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)"
+    ],
+    "allow": [
+      "Bash(uv run pytest)",
+      "Bash(uv run pytest *)",
+      "Bash(uv run ruff check)",
+      "Bash(uv run ruff check *)",
+      "Bash(uv run ruff format)",
+      "Bash(uv run ruff format *)",
+      "Bash(uv run mypy)",
+      "Bash(uv run mypy *)",
+      "Bash(uv run lint-imports)",
+      "Bash(uv run lint-imports *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet python -c \"import json, re, sys; c = json.load(sys.stdin).get('tool_input', {}).get('command', ''); hit = re.search(r'\\.env(?!\\w)|secrets\\.toml', c); hit and sys.stderr.write('Blocked: this command mentions .env or secrets.toml, which hold secrets.\\n'); sys.exit(2 if hit else 0)\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet python -c \"import json, subprocess, sys; p = json.load(sys.stdin).get('tool_input', {}).get('file_path', ''); sys.exit(subprocess.run(['ruff', 'format', '--quiet', p]).returncode if p.endswith('.py') else 0)\""
+          }
+        ]
+      }
+    ]
+  }
+}
