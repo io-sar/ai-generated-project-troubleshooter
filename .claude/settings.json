@@ -25,6 +25,17 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet python -c \"import json, re, sys; c = json.load(sys.stdin).get('tool_input', {}).get('command', ''); hit = re.search(r'\\.env(?!\\w)|secrets\\.toml', c); hit and sys.stderr.write('Blocked: this command mentions .env or secrets.toml, which hold secrets.\\n'); sys.exit(2 if hit else 0)\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

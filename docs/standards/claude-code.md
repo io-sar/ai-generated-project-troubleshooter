@@ -16,7 +16,7 @@ On-demand reference: not loaded automatically. The rules Claude follows are in C
 ## Permissions
 - **Rule:** `.claude/settings.json` denies reading `.env`, key files and `.streamlit/secrets.toml`, denies force pushes, and allows the routine check commands.
 - **Why:** Instructions are context; settings actually block actions.
-- **Status:** Enforced, on a best-effort basis: a shell command can still open a file that Read is denied.
+- **Status:** Enforced, on a best-effort basis. A hook also blocks any shell command that mentions `.env` or `secrets.toml`, but a shell glob or a split string can still get past it, so Claude Code's sandbox is the stronger option.
 
 ## Hooks for automatic checks
 - **Rule:** After each edit, a hook runs `ruff format` on the changed Python file.
