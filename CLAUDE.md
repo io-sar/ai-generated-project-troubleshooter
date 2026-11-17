@@ -87,3 +87,35 @@ Scenario text can be drafted by AI. The author reviews all Greek UI text.
 
 ## Writing
 Repo docs are public. Write them for outside readers, in plain language.
+
+<!-- project-init:start v0.4.1 2026-11-17 -->
+## Project standards
+
+### Project profile
+Stage: MVP · Data: none stored · Interfaces: web UI · Growth: stays small · Regulation: none confirmed (GDPR, EU AI Act, EAA open) · Team: solo · Architecture: modular monolith · AI: uses LLMs
+
+### Commands
+| Task | Command |
+|---|---|
+| Setup | `uv sync`, then `uv run pre-commit install` |
+| Run | `uv run streamlit run streamlit_app.py` |
+| Test | `uv run pytest -q` |
+| Lint / format | `uv run ruff check` · `uv run ruff format` |
+| Type check | `uv run mypy` |
+| Import contracts | `uv run lint-imports` |
+
+### Non-negotiables
+- Run the tests and all checks before finishing. Never delete, skip or weaken a test to make it pass.
+- Never read `.env`, key or credential files.
+- For changes touching several files or the architecture, propose a plan first and wait for agreement.
+- When editing existing code, follow the patterns already in that module unless a rule says otherwise.
+
+### Standards
+- Always loaded: `.claude/rules/security.md` (visitor-data isolation, web safety, dependencies), `code-quality.md` (tooling, docstrings, debt), `operations.md` (logging).
+- Loaded with matching files: `testing.md` for `tests/`; `ai-llm.md` for `llm/`, `engines/`, prompts, scripts and evals; `frontend.md` for `app_pages/`, `ui/` and `streamlit_app.py`; `delivery.md` for `.github/` and pre-commit.
+- On demand: `docs/standards/<topic>.md` gives each rule's reason and trade-off. Read the matching file before changing security, the LLM pipeline, CI or the architecture.
+
+### Decisions
+Architecture decisions are in `docs/adr/`. Read the relevant ADR before changing a design. Never edit an accepted ADR; supersede it. Hard-to-reverse choices (data model, provider, hosting, licence, a paid tool) get an ADR. Easy-to-reverse ones don't.
+Standards planned for later milestones are in `docs/standards-adoption.md`. Don't apply them unless asked.
+<!-- project-init:end · Re-run /project-init to update this block; content outside the markers is never changed by the skill. -->
