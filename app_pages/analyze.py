@@ -13,7 +13,11 @@ from troubleshooter.domain.models import Sample
 from troubleshooter.engines.sample_engine import SampleFormatError, list_sample_ids, load_sample
 from troubleshooter.i18n import t
 from troubleshooter.ui import state
-from troubleshooter.ui.report_view import render_report, render_report_header
+from troubleshooter.ui.report_view import (
+    render_report,
+    render_report_header,
+    render_under_the_hood,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,3 +68,4 @@ if shown is not None:
     render_report_header(shown)
     # The author's reviewed version is the main report; the AI draft is shown for comparison.
     render_report(shown.final)
+    render_under_the_hood(shown.final, shown.diagnosis)

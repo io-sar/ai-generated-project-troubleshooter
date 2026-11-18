@@ -10,8 +10,25 @@ from typing import Literal
 import streamlit as st
 
 from troubleshooter.domain.codes import Dimension, HealthLabel, ReportSource
-from troubleshooter.domain.models import HealthScores, Report, Risk, Sample, Sprint
-from troubleshooter.domain.scoring import label_for, overall_label, risk_score
+from troubleshooter.domain.models import (
+    DecisionMemo,
+    Diagnosis,
+    HealthScores,
+    RaciRow,
+    Report,
+    Risk,
+    Sample,
+    Sprint,
+    StakeholderUpdates,
+)
+from troubleshooter.domain.raci import rows_without_one_accountable
+from troubleshooter.domain.scoring import (
+    dimension_scores,
+    label_for,
+    overall_label,
+    overall_score,
+    risk_score,
+)
 from troubleshooter.i18n import t
 
 BadgeColor = Literal["green", "blue", "orange", "red"]
@@ -65,6 +82,93 @@ def render_report(report: Report) -> None:
     render_health(report.health)
     render_risks(report.risks)
     render_recovery_plan(report)
+    render_stakeholder_updates(report.stakeholder_updates)
+    render_decision_memo(report.decision_memo)
+    render_raci(report.raci)
+
+
+def render_stakeholder_updates(updates: StakeholderUpdates) -> None:
+    """Show one tab per audience, each with a copy button."""
+    st.subheader(t("updates.title"), anchor=False)
+    audiences = {
+        "executive": updates.executive,
+        "delivery_team": updates.delivery_team,
+        "customer": updates.customer,
+    }
+    tabs = st.tabs([t(f"updates.{audience}") for audience in audiences])
+    for tab, text in zip(tabs, audiences.values(), strict=True):
+        # A code block copies with one click and never renders Markdown.
+        tab.code(text, language=None, wrap_lines=True)
+
+
+def render_decision_memo(memo: DecisionMemo) -> None:
+    """Show the context, the options and their trade-offs, the recommendation and metrics."""
+    st.subheader(t("memo.title"), anchor=False)
+    st.markdown(f"**{t('memo.context')}**")
+    st.markdown(plain(memo.context))
+    rows = [
+        {t("memo.option"): option.title, t("memo.trade_offs"): option.trade_offs}
+        for option in memo.options
+    ]
+    st.dataframe(rows, hide_index=True)
+    st.markdown(f"**{t('memo.recommendation')}**")
+    st.markdown(plain(memo.recommendation))
+    st.markdown(f"**{t('memo.success_metrics')}**")
+    st.markdown("\n".join(f"- {plain(metric)}" for metric in memo.success_metrics))
+
+
+def render_raci(raci: list[RaciRow]) -> None:
+    """Show activities by roles, and flag rows that don't have exactly one Accountable."""
+    st.subheader(t("raci.title"), anchor=False)
+    broken = set(rows_without_one_accountable(raci))
+    roles = list(dict.fromkeys(a.role for row in raci for a in row.assignments))
+    rows = []
+    for position, row in enumerate(raci):
+        cells: dict[str, list[str]] = {role: [] for role in roles}
+        for assignment in row.assignments:
+            # A role listed twice keeps both codes rather than silently losing one.
+            cells[assignment.role].append(assignment.code)
+        check = t("raci.needs_one_a") if position in broken else ""
+        rows.append(
+            {t("raci.activity"): row.activity}
+            | {role: ", ".join(codes) for role, codes in cells.items()}
+            | {t("raci.check"): check}
+        )
+    st.dataframe(rows, hide_index=True)
+    if broken:
+        names = ", ".join(raci[position].activity for position in sorted(broken))
+        st.warning(t("raci.warning", activities=plain(names)))
+
+
+def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
+    """Show the numbers and data behind the report, for readers who want the detail."""
+    with st.expander(t("hood.title")):
+        st.markdown(f"**{t('hood.engine')}:** {t('hood.sample_engine')}")
+        scores = dimension_scores(report.health)
+        rows = [
+            {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
+            for dimension, score in scores.items()
+        ]
+        rows.append(
+            {
+                t("hood.dimension"): t("health.overall"),
+                t("hood.score"): overall_score(report.health),
+            }
+        )
+        st.markdown(f"**{t('hood.scores')}**")
+        st.dataframe(rows, hide_index=True)
+        st.markdown(f"**{t('hood.signals')}**")
+        signals = [
+            {
+                t("hood.signal_id"): signal.id,
+                t("hood.observation"): signal.observation,
+                t("hood.evidence"): signal.evidence,
+            }
+            for signal in diagnosis.signals
+        ]
+        st.dataframe(signals, hide_index=True)
+        st.markdown(f"**{t('hood.diagnosis')}**")
+        st.json(diagnosis.model_dump(mode="json"), expanded=False)
 
 
 def render_health(health: HealthScores) -> None:

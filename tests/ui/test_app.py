@@ -1,3 +1,4 @@
+import json
 import shutil
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from streamlit.testing.v1 import AppTest
 
 import troubleshooter
 from troubleshooter import config
+from troubleshooter.engines.sample_engine import load_sample
 from troubleshooter.i18n import t
 
 APP = Path(__file__).parents[2] / "streamlit_app.py"
@@ -125,16 +127,86 @@ def test_unknown_shared_link_falls_back_to_the_selector(sample: str) -> None:
     assert not shows_report(app)
 
 
-def test_broken_sample_shows_a_friendly_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    broken = tmp_path / "placeholder"
-    shutil.copytree(config.SAMPLES_DIR / "placeholder", broken)
-    (broken / "draft.json").write_text("{not json", encoding="utf-8")
+@pytest.fixture
+def sample_copy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A copy of the placeholder that the app loads instead, so a test can break it."""
+    folder = tmp_path / "placeholder"
+    shutil.copytree(config.SAMPLES_DIR / "placeholder", folder)
     monkeypatch.setattr(config, "SAMPLES_DIR", tmp_path)
+    return folder
+
+
+def test_broken_sample_shows_a_friendly_error(sample_copy: Path) -> None:
+    (sample_copy / "draft.json").write_text("{not json", encoding="utf-8")
 
     app = run_app(sample="placeholder")
 
     assert not app.exception
     assert app.error[0].value == t("errors.no_samples")
     assert not shows_report(app)
+
+
+def test_stakeholder_updates_have_one_copyable_tab_each() -> None:
+    app = run_app(sample="placeholder")
+    final = load_sample(config.SAMPLES_DIR, "placeholder").final.stakeholder_updates
+
+    assert [tab.label for tab in app.tabs] == [
+        t("updates.executive"),
+        t("updates.delivery_team"),
+        t("updates.customer"),
+    ]
+    assert [block.value for block in app.code] == [
+        final.executive,
+        final.delivery_team,
+        final.customer,
+    ]
+
+
+def test_decision_memo_shows_options_and_recommendation() -> None:
+    app = run_app(sample="placeholder")
+    options = app.dataframe[4].value
+
+    assert list(options[t("memo.option")]) == [
+        "Keep the April date",
+        "Extend the licence by two months",
+    ]
+    assert r"Extend the licence by two months and cut over in June\." in markdown_text(app)
+
+
+def test_raci_grid_shows_codes_by_role_with_no_warning() -> None:
+    app = run_app(sample="placeholder")
+    raci = app.dataframe[5].value
+
+    assert list(raci[t("raci.activity")]) == [
+        "Schema handover",
+        "Data cleaning",
+        "Cutover decision",
+    ]
+    assert list(raci["Data analyst"]) == ["", "R", ""]
+    assert list(raci[t("raci.check")]) == ["", "", ""]
+    assert not app.warning
+
+
+def test_raci_row_with_two_accountables_is_flagged(sample_copy: Path) -> None:
+    final_path = sample_copy / "final.json"
+    final = json.loads(final_path.read_text(encoding="utf-8"))
+    final["raci"][1]["assignments"][1]["code"] = "A"
+    final_path.write_text(json.dumps(final), encoding="utf-8")
+
+    app = run_app(sample="placeholder")
+    raci = app.dataframe[5].value
+
+    assert not app.exception
+    assert list(raci[t("raci.check")]) == ["", t("raci.needs_one_a"), ""]
+    assert app.warning[0].value == t("raci.warning", activities="Data cleaning")
+
+
+def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
+    app = run_app(sample="placeholder")
+    scores = app.dataframe[6].value
+    signals = app.dataframe[7].value
+
+    assert app.expander[0].label == t("hood.title")
+    assert list(scores[t("hood.score")]) == [30, 65, 40, 50, 35, 44]
+    assert list(signals[t("hood.signal_id")]) == ["S1", "S2", "S3", "S4", "S5"]
+    assert app.json[0].value

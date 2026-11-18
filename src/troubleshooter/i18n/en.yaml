@@ -43,6 +43,44 @@ plan:
   owner: Owner
   success_signal: Success signal
 
+updates:
+  title: Stakeholder updates
+  executive: Executive
+  delivery_team: Delivery team
+  customer: Customer
+
+memo:
+  title: Decision memo
+  context: Context
+  option: Option
+  trade_offs: Trade-offs
+  recommendation: Recommendation
+  success_metrics: Success metrics
+
+raci:
+  title: RACI matrix
+  activity: Activity
+  check: Check
+  needs_one_a: Needs exactly one A
+  warning: "These activities need exactly one Accountable (A): {activities}"
+  R: Responsible
+  A: Accountable
+  C: Consulted
+  I: Informed
+
+hood:
+  title: Under the hood
+  engine: Engine
+  sample_engine: Stored sample
+  scores: Health scores (0–100, higher is healthier)
+  dimension: Dimension
+  score: Score
+  signals: Signals from the diagnosis
+  signal_id: ID
+  observation: Observation
+  evidence: Evidence
+  diagnosis: Diagnosis JSON
+
 errors:
   sample_not_found: That sample doesn't exist. Pick one from the list below.
   no_samples: The samples can't be loaded right now. Please try again later.
@@ -70,12 +108,6 @@ escalation:
   pm: PM
   sponsor: Sponsor
   steering: Steering
-
-raci:
-  R: Responsible
-  A: Accountable
-  C: Consulted
-  I: Informed
 
 badge:
   recorded: Recorded AI run, reviewed by the author

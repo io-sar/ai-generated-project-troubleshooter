@@ -1,9 +1,15 @@
 from enum import StrEnum
+from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 
+import troubleshooter.i18n
 from troubleshooter.domain import codes
 from troubleshooter.i18n import keys, t
+
+CATALOG_DIR = Path(troubleshooter.i18n.__file__).parent
 
 CODE_SECTIONS: dict[str, type[StrEnum]] = {
     "project_type": codes.ProjectType,
@@ -50,6 +56,23 @@ def test_every_code_has_display_text(section: str) -> None:
         key.removeprefix(f"{section}.") for key in keys() if key.startswith(f"{section}.")
     }
     assert not missing
+
+
+class _DuplicateKeyLoader(yaml.SafeLoader):
+    """Fails on a repeated key, which plain YAML loading silently overwrites."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        seen: set[Any] = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            assert key not in seen, f"duplicate key {key!r} on line {key_node.start_mark.line + 1}"
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
+@pytest.mark.parametrize("catalog", sorted(CATALOG_DIR.glob("*.yaml")), ids=lambda p: p.name)
+def test_catalog_has_no_duplicate_keys(catalog: Path) -> None:
+    yaml.load(catalog.read_text(encoding="utf-8"), Loader=_DuplicateKeyLoader)  # noqa: S506
 
 
 def test_code_translates_by_value() -> None:
