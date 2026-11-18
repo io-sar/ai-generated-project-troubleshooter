@@ -2,7 +2,9 @@
 
 import streamlit as st
 
-st.set_page_config(page_title="AI Project Troubleshooter", layout="wide")
+from troubleshooter.i18n import t
 
-page = st.navigation([st.Page("app_pages/analyze.py", title="Analyze", default=True)])
+st.set_page_config(page_title=t("app.title"), layout="wide")
+
+page = st.navigation([st.Page("app_pages/analyze.py", title=t("nav.analyze"), default=True)])
 page.run()

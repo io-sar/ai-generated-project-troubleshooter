@@ -3,6 +3,7 @@
 import streamlit as st
 
 import troubleshooter
+from troubleshooter.i18n import t
 
-st.title("AI Project Troubleshooter")
-st.caption(f"Version {troubleshooter.__version__}")
+st.title(t("app.title"))
+st.caption(t("app.version", version=troubleshooter.__version__))

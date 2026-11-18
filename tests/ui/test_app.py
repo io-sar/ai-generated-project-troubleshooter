@@ -3,6 +3,7 @@ from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
 import troubleshooter
+from troubleshooter.i18n import t
 
 APP = Path(__file__).parents[2] / "streamlit_app.py"
 
@@ -19,5 +20,5 @@ def test_app_runs_without_errors() -> None:
 
 def test_default_page_shows_package_version() -> None:
     app = run_app()
-    assert app.title[0].value == "AI Project Troubleshooter"
-    assert app.caption[0].value == f"Version {troubleshooter.__version__}"
+    assert app.title[0].value == t("app.title")
+    assert app.caption[0].value == t("app.version", version=troubleshooter.__version__)

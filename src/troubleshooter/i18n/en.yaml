@@ -1,0 +1,46 @@
+# English UI text. Keys are looked up with t("section.key").
+# Code sections (project_type, dimension, ...) must cover every value of the
+# matching enum in troubleshooter.domain.codes; a test checks this.
+
+app:
+  title: AI Project Troubleshooter
+  version: Version {version}
+
+nav:
+  analyze: Analyze
+
+project_type:
+  software_delivery: Software delivery
+  ai_implementation: AI implementation
+  service_migration: Service migration
+  product_launch: Product launch
+
+dimension:
+  schedule: Schedule
+  scope: Scope
+  quality: Quality
+  risk_control: Risk control
+  stakeholder_confidence: Stakeholder confidence
+
+health_label:
+  good: Good
+  problematic: Problematic
+  at_risk: At Risk
+
+escalation:
+  team: Team
+  pm: PM
+  sponsor: Sponsor
+  steering: Steering
+
+raci:
+  R: Responsible
+  A: Accountable
+  C: Consulted
+  I: Informed
+
+input_classification:
+  troubled: Troubled project
+  healthy: Healthy project
+  too_thin: Not enough detail
+  off_topic: Not a project scenario
