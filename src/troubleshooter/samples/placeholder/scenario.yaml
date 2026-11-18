@@ -1,0 +1,21 @@
+# Placeholder sample, written by Claude to exercise the report layout during M2.
+# It is not a recorded AI run, and it is removed in M5 before release 0.1.
+title: "Placeholder: CRM migration running late"
+badge: placeholder
+scenario:
+  project_type: service_migration
+  text: >-
+    We are moving our customer support team from an on-premise CRM to a cloud
+    service. Cutover was planned for 1 March and has already moved twice. A
+    trial data load found that 12% of customer records fail validation, mostly
+    duplicate contacts and missing country codes. The only database
+    administrator who knows the old schema has handed in their notice and
+    leaves in five weeks. The support manager says agents haven't been trained
+    yet and is worried about the busy season starting in May. The sponsor
+    still expects the old system to be switched off by the end of April to
+    avoid another licence renewal.
+  key_points:
+    - Cutover has slipped twice and the licence deadline is fixed.
+    - Data quality blocks the migration.
+    - The only person who knows the old schema is leaving.
+    - Agents are untrained ahead of the busy season.
