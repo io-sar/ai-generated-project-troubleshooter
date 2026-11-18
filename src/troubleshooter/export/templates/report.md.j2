@@ -24,7 +24,7 @@
 | {{ t("hood.dimension") }} | {{ t("health.status") }} | {{ t("health.rationale") }} |
 |---|---|---|
 {% for d in dimensions %}
-| {{ t("dimension." ~ d.code) }} | {{ t("health_label." ~ d.label) }} | {{ d.rationale | one_line }} |
+| {{ t("dimension." ~ d.code) }} | {{ t("health_label." ~ d.label) }}{% if d.adjusted %} *({{ t("edit.marker") }})*{% endif %} | {{ d.rationale | one_line }}{% if d.note %} — {{ t("edit.note_shown", note=d.note) | one_line }}{% endif %} |
 {% endfor %}
 
 ## {{ t("risks.title") }}
@@ -33,7 +33,7 @@
 |---|---|---|---|---|---|---|---|---|
 {% for item in risks %}
 {% set risk = item.risk %}
-| {{ risk.id | one_line }} | {{ risk.description | one_line }} | {{ risk.likelihood }} | {{ risk.impact }} | {{ item.score }} | {{ risk.owner | one_line }} | {{ risk.mitigation | one_line }} | {{ t("escalation." ~ risk.escalation) }} | {{ risk.signal_ids | join(", ") | one_line }} |
+| {{ risk.id | one_line }}{% if risk.human_adjusted %} *({{ t("edit.marker") }})*{% endif %} | {{ risk.description | one_line }} | {{ risk.likelihood }} | {{ risk.impact }} | {{ item.score }} | {{ risk.owner | one_line }} | {{ risk.mitigation | one_line }} | {{ t("escalation." ~ risk.escalation) }} | {{ risk.signal_ids | join(", ") | one_line }} |
 {% endfor %}
 
 ## {{ t("plan.title") }}
@@ -87,7 +87,7 @@
 | {{ t("raci.activity") }} |{% for role in roles %} {{ role | one_line }} |{% endfor %} {{ t("raci.check") }} |
 |---|{% for role in roles %}---|{% endfor %}---|
 {% for row in raci %}
-| {{ row.activity | one_line }} |{% for role in roles %} {{ row.cells[role] }} |{% endfor %} {{ t("raci.needs_one_a") if row.broken else "" }} |
+| {{ row.activity | one_line }}{% if row.adjusted %} *({{ t("edit.marker") }})*{% endif %} |{% for role in roles %} {{ row.cells[role] }} |{% endfor %} {{ t("raci.needs_one_a") if row.broken else "" }} |
 {% endfor %}
 {% if changes %}
 

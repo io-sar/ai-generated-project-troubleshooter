@@ -456,10 +456,10 @@ def _label_badge(label: HealthLabel) -> str:
     return f":{_LABEL_COLORS[label]}-badge[{t(f'health_label.{label}')}]"
 
 
-def render_downloads(sample: Sample, generated_at: datetime) -> None:
-    """Offer the final version as Markdown and as print-ready HTML."""
+def render_downloads(sample: Sample, report: Report, generated_at: datetime) -> None:
+    """Offer the final version, with the visitor's edits, as Markdown and print-ready HTML."""
     data = ExportInput(
-        report=sample.final,
+        report=report,
         title=sample.title,
         source=sample.badge,
         scenario=sample.scenario,

@@ -50,7 +50,7 @@
 <table>
   <tr><th>{{ t("hood.dimension") }}</th><th>{{ t("health.status") }}</th><th>{{ t("health.rationale") }}</th></tr>
 {% for d in dimensions %}
-  <tr><td>{{ t("dimension." ~ d.code) }}</td><td><span class="badge {{ d.label }}">{{ t("health_label." ~ d.label) }}</span></td><td>{{ d.rationale }}</td></tr>
+  <tr><td>{{ t("dimension." ~ d.code) }}</td><td><span class="badge {{ d.label }}">{{ t("health_label." ~ d.label) }}</span>{% if d.adjusted %} <span class="badge">{{ t("edit.marker") }}</span>{% endif %}</td><td>{{ d.rationale }}{% if d.note %}<br><em>{{ t("edit.note_shown", note=d.note) }}</em>{% endif %}</td></tr>
 {% endfor %}
 </table>
 
@@ -59,7 +59,7 @@
   <tr><th>{{ t("risks.id") }}</th><th>{{ t("risks.description") }}</th><th>{{ t("risks.likelihood") }}</th><th>{{ t("risks.impact") }}</th><th>{{ t("risks.score") }}</th><th>{{ t("risks.owner") }}</th><th>{{ t("risks.mitigation") }}</th><th>{{ t("risks.escalation") }}</th><th>{{ t("risks.signals") }}</th></tr>
 {% for item in risks %}
 {% set risk = item.risk %}
-  <tr><td>{{ risk.id }}</td><td>{{ risk.description }}</td><td>{{ risk.likelihood }}</td><td>{{ risk.impact }}</td><td>{{ item.score }}</td><td>{{ risk.owner }}</td><td>{{ risk.mitigation }}</td><td>{{ t("escalation." ~ risk.escalation) }}</td><td>{{ risk.signal_ids | join(", ") }}</td></tr>
+  <tr><td>{{ risk.id }}{% if risk.human_adjusted %} <span class="badge">{{ t("edit.marker") }}</span>{% endif %}</td><td>{{ risk.description }}</td><td>{{ risk.likelihood }}</td><td>{{ risk.impact }}</td><td>{{ item.score }}</td><td>{{ risk.owner }}</td><td>{{ risk.mitigation }}</td><td>{{ t("escalation." ~ risk.escalation) }}</td><td>{{ risk.signal_ids | join(", ") }}</td></tr>
 {% endfor %}
 </table>
 
@@ -104,7 +104,7 @@
 <table>
   <tr><th>{{ t("raci.activity") }}</th>{% for role in roles %}<th>{{ role }}</th>{% endfor %}<th>{{ t("raci.check") }}</th></tr>
 {% for row in raci %}
-  <tr><td>{{ row.activity }}</td>{% for role in roles %}<td>{{ row.cells[role] }}</td>{% endfor %}<td>{% if row.broken %}<span class="warning">{{ t("raci.needs_one_a") }}</span>{% endif %}</td></tr>
+  <tr><td>{{ row.activity }}{% if row.adjusted %} <span class="badge">{{ t("edit.marker") }}</span>{% endif %}</td>{% for role in roles %}<td>{{ row.cells[role] }}</td>{% endfor %}<td>{% if row.broken %}<span class="warning">{{ t("raci.needs_one_a") }}</span>{% endif %}</td></tr>
 {% endfor %}
 </table>
 {% if changes %}

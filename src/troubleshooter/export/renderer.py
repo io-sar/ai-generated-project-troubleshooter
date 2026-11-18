@@ -13,7 +13,7 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from troubleshooter.domain.codes import Dimension, ReportSource
-from troubleshooter.domain.models import Report, Scenario
+from troubleshooter.domain.models import DimensionHealth, HealthScores, Report, Scenario
 from troubleshooter.domain.raci import codes_by_role, roles_in_order, rows_without_one_accountable
 from troubleshooter.domain.scoring import label_for, overall_label, risk_score
 from troubleshooter.export.markdown import escape_markdown
@@ -113,14 +113,7 @@ def _context(data: ExportInput) -> dict[str, Any]:
         "changes": data.changes,
         "generated": data.generated_at.astimezone(UTC).strftime(t("export.date_format")),
         "overall": overall_label(report.health),
-        "dimensions": [
-            {
-                "code": dimension,
-                "label": label_for(getattr(report.health, dimension.value).score),
-                "rationale": getattr(report.health, dimension.value).rationale,
-            }
-            for dimension in Dimension
-        ],
+        "dimensions": [_dimension(report.health, dimension) for dimension in Dimension],
         "risks": [{"risk": risk, "score": risk_score(risk)} for risk in report.risks],
         "sprints": [
             ("stabilize", plan.stabilize),
@@ -139,7 +132,19 @@ def _context(data: ExportInput) -> dict[str, Any]:
                 "activity": row.activity,
                 "cells": codes_by_role(row, roles),
                 "broken": position in broken,
+                "adjusted": row.human_adjusted,
             }
             for position, row in enumerate(report.raci)
         ],
+    }
+
+
+def _dimension(health: HealthScores, dimension: Dimension) -> dict[str, Any]:
+    status: DimensionHealth = getattr(health, dimension.value)
+    return {
+        "code": dimension,
+        "label": label_for(status.score),
+        "rationale": status.rationale,
+        "adjusted": status.human_adjusted,
+        "note": status.note,
     }

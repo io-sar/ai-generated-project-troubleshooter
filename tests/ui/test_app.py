@@ -10,7 +10,9 @@ import troubleshooter
 from troubleshooter import config
 from troubleshooter.engines.sample_engine import load_sample
 from troubleshooter.export.markdown import escape_markdown
+from troubleshooter.export.renderer import ExportInput, render_markdown
 from troubleshooter.i18n import t
+from troubleshooter.ui import report_view
 
 APP = Path(__file__).parents[2] / "streamlit_app.py"
 PLACEHOLDER_BADGE = f":orange-badge[{t('badge.placeholder')}]"
@@ -602,6 +604,33 @@ def test_how_this_was_built_links_the_board_and_repo() -> None:
 
     assert f"[{t('how.links.board')}]({config.BOARD_URL})" in text
     assert f"[{t('how.links.repo')}]({config.REPO_URL})" in text
+
+
+@pytest.fixture
+def exported(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """The Markdown each run offers for download, newest last.
+
+    AppTest can't read a download's contents, so this wraps the app's renderer instead.
+    """
+    outputs: list[str] = []
+
+    def spy(data: ExportInput) -> str:
+        outputs.append(render_markdown(data))
+        return outputs[-1]
+
+    monkeypatch.setattr(report_view, "render_markdown", spy)
+    return outputs
+
+
+def test_edit_reaches_the_download_with_its_marker(exported: list[str]) -> None:
+    app = run_app(sample="placeholder")
+    assert r"*(Human\-adjusted)*" not in exported[-1]
+
+    edit_risks(app, {"edited_rows": {2: {"impact": 5}}})
+
+    risk_line = next(line for line in exported[-1].splitlines() if line.startswith("| R3"))
+    assert risk_line.startswith(r"| R3 *(Human\-adjusted)* |")
+    assert "| 3 | 5 | 15 |" in risk_line
 
 
 def test_report_offers_markdown_and_html_downloads() -> None:
