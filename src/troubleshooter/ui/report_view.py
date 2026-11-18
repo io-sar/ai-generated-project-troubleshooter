@@ -20,6 +20,7 @@ from troubleshooter.domain.codes import (
 from troubleshooter.domain.models import (
     DecisionMemo,
     Diagnosis,
+    DimensionHealth,
     HealthScores,
     RaciRow,
     Report,
@@ -104,7 +105,7 @@ def render_report(report: Report, *, editable: bool = False) -> None:
 
     Pass `editable=True` only for the final version: the AI draft is never edited.
     """
-    render_health(report.health)
+    render_health(report.health, editable=editable)
     if editable:
         render_risk_editor(report.risks)
     else:
@@ -280,15 +281,48 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
         st.json(diagnosis.model_dump(mode="json"), expanded=False)
 
 
-def render_health(health: HealthScores) -> None:
-    """Show the overall label and each dimension's label and rationale, without numbers."""
+def render_health(health: HealthScores, *, editable: bool = False) -> None:
+    """Show the overall label and each dimension's label and rationale, without numbers.
+
+    With `editable=True`, each dimension also gets a collapsed form to override its label
+    and add a note. The AI rationale always stays visible.
+    """
     st.subheader(t("health.title"), anchor=False)
     overall = overall_label(health)
     st.markdown(f"{t('health.overall')} {_label_badge(overall)}")
     for dimension in Dimension:
-        status = getattr(health, dimension.value)
-        st.markdown(f"**{t(f'dimension.{dimension}')}** {_label_badge(label_for(status.score))}")
+        status: DimensionHealth = getattr(health, dimension.value)
+        heading = f"**{t(f'dimension.{dimension}')}** {_label_badge(label_for(status.score))}"
+        if status.human_adjusted:
+            heading += f" :gray-badge[{t('edit.marker')}]"
+        st.markdown(heading)
         st.caption(plain(status.rationale))
+        if status.note:
+            st.caption(t("edit.note_shown", note=plain(status.note)))
+        if editable:
+            _render_health_override(dimension, status)
+
+
+def _render_health_override(dimension: Dimension, status: DimensionHealth) -> None:
+    name = t(f"dimension.{dimension}")
+    labels = list(HealthLabel)
+    with st.expander(t("edit.adjust")), st.form(f"health_{dimension}_form", border=False):
+        label = st.selectbox(
+            t("edit.label_for", dimension=name),
+            labels,
+            index=labels.index(label_for(status.score)),
+            format_func=lambda code: t(f"health_label.{code}"),
+            key=state.editor_key(f"health_{dimension}_label"),
+        )
+        note = st.text_input(
+            t("edit.note_for", dimension=name),
+            value=status.note or "",
+            key=state.editor_key(f"health_{dimension}_note"),
+        )
+        applied = st.form_submit_button(t("edit.apply"), key=f"health_{dimension}_apply")
+    if applied:
+        state.save_health_override(dimension, label, note)
+        st.rerun()
 
 
 def render_risks(risks: list[Risk]) -> None:

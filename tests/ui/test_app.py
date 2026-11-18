@@ -9,6 +9,7 @@ from streamlit.testing.v1 import AppTest
 import troubleshooter
 from troubleshooter import config
 from troubleshooter.engines.sample_engine import load_sample
+from troubleshooter.export.markdown import escape_markdown
 from troubleshooter.i18n import t
 
 APP = Path(__file__).parents[2] / "streamlit_app.py"
@@ -86,6 +87,74 @@ def test_health_dashboard_shows_labels_not_numbers() -> None:
         assert f"**{t(f'dimension.{dimension}')}** {badge(label)}" in text
     for score in ("30", "65", "40", "50", "35", "44"):
         assert not any(score in line for line in text)
+
+
+MARKER_BADGE = f":gray-badge[{t('edit.marker')}]"
+
+
+def test_final_view_has_adjust_controls_for_each_dimension() -> None:
+    app = run_app(sample="placeholder")
+
+    assert [expander.label for expander in app.expander].count(t("edit.adjust")) == 5
+
+
+def override_health(app: AppTest, dimension: str, label: str, note: str = "") -> AppTest:
+    """Pick a label and note in one dimension's Adjust form, then click Apply."""
+    name = t(f"dimension.{dimension}")
+    select = next(box for box in app.selectbox if box.label == t("edit.label_for", dimension=name))
+    select.set_value(label)
+    note_input = next(
+        box for box in app.text_input if box.label == t("edit.note_for", dimension=name)
+    )
+    note_input.input(note)
+    app.button(key=f"health_{dimension}_apply").click().run()
+    return app
+
+
+def test_health_label_override_shows_the_marker_and_recalculates() -> None:
+    app = run_app(sample="placeholder")
+
+    override_health(app, "scope", "at_risk")
+
+    text = markdown_text(app)
+    assert not app.exception
+    # Scope's 65 becomes At Risk's 15, so the average of 34 is At Risk.
+    assert f"{t('health.overall')} {badge('at_risk')}" in text
+    assert f"**{t('dimension.scope')}** {badge('at_risk')} {MARKER_BADGE}" in text
+    assert f"**{t('dimension.schedule')}** {badge('at_risk')}" in text
+
+
+def test_health_note_appears_beside_the_ai_rationale() -> None:
+    app = run_app(sample="placeholder")
+    rationale = load_sample(config.SAMPLES_DIR, "placeholder").final.health.quality.rationale
+
+    override_health(app, "quality", "problematic", "QA *signed* off.")
+
+    captions = [element.value for element in app.caption]
+    assert captions[captions.index(escape_markdown(rationale)) + 1] == t(
+        "edit.note_shown", note=r"QA \*signed\* off\."
+    )
+    assert f"**{t('dimension.quality')}** {badge('problematic')} {MARKER_BADGE}" in (
+        markdown_text(app)
+    )
+
+
+def test_choosing_the_ai_label_without_a_note_removes_the_marker() -> None:
+    app = run_app(sample="placeholder")
+    override_health(app, "scope", "at_risk", "Too optimistic.")
+
+    override_health(app, "scope", "problematic", "")
+
+    text = markdown_text(app)
+    assert f"**{t('dimension.scope')}** {badge('problematic')}" in text
+    assert f"{t('health.overall')} {badge('problematic')}" in text
+    assert not any(MARKER_BADGE in line for line in text)
+
+
+def test_compare_view_has_no_health_controls() -> None:
+    app = compare_view()
+
+    assert t("edit.adjust") not in [expander.label for expander in app.expander]
 
 
 def test_risk_register_lists_final_risks_with_their_scores_and_levels() -> None:
@@ -379,7 +448,7 @@ def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
     scores = app.dataframe[6].value
     signals = app.dataframe[7].value
 
-    assert app.expander[0].label == t("hood.title")
+    assert app.expander[-1].label == t("hood.title")
     assert list(scores[t("hood.score")]) == [30, 65, 40, 50, 35, 44]
     assert list(signals[t("hood.signal_id")]) == ["S1", "S2", "S3", "S4", "S5"]
     assert app.json[0].value

@@ -103,6 +103,10 @@ edit:
   column: Edited
   marker: Human-adjusted
   rejected: "Row {row}: check the {column} value. Nothing was changed yet."
+  adjust: Adjust
+  label_for: "{dimension} label"
+  note_for: "{dimension} note (optional)"
+  note_shown: "Note: {note}"
 
 plan:
   title: Recovery plan
