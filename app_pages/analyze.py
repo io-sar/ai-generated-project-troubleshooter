@@ -4,6 +4,7 @@ A link such as ``?sample=<id>`` opens that sample's report directly.
 """
 
 import logging
+from datetime import UTC, datetime
 
 import streamlit as st
 
@@ -15,6 +16,7 @@ from troubleshooter.i18n import t
 from troubleshooter.ui import state
 from troubleshooter.ui.report_view import (
     render_comparison,
+    render_downloads,
     render_report,
     render_report_header,
     render_under_the_hood,
@@ -80,4 +82,5 @@ if shown is not None:
         render_comparison(shown)
     else:
         render_report(shown.final)
+    render_downloads(shown, generated_at=datetime.now(UTC))
     render_under_the_hood(shown.final, shown.diagnosis)

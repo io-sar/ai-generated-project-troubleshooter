@@ -1,7 +1,12 @@
 import pytest
 
 from troubleshooter.domain.models import RaciRow
-from troubleshooter.domain.raci import has_one_accountable, rows_without_one_accountable
+from troubleshooter.domain.raci import (
+    codes_by_role,
+    has_one_accountable,
+    roles_in_order,
+    rows_without_one_accountable,
+)
 
 
 def make_row(*codes: str) -> RaciRow:
@@ -43,3 +48,30 @@ def test_broken_rows_are_found_by_position() -> None:
     raci = [make_row("A"), make_row("R"), make_row("A", "R"), make_row("A", "A")]
 
     assert rows_without_one_accountable(raci) == [1, 3]
+
+
+def test_roles_keep_the_order_they_first_appear() -> None:
+    rows = [make_row("A", "R"), make_row("C", "A", "I")]
+
+    assert roles_in_order(rows) == ["Role 1", "Role 2", "Role 3"]
+
+
+def test_no_rows_means_no_roles() -> None:
+    assert roles_in_order([]) == []
+
+
+def test_roles_with_no_part_get_an_empty_cell() -> None:
+    row = make_row("A")
+
+    assert codes_by_role(row, ["Role 1", "Role 2"]) == {"Role 1": "A", "Role 2": ""}
+
+
+def test_a_role_listed_twice_keeps_both_codes() -> None:
+    row = RaciRow.model_validate(
+        {
+            "activity": "Cutover",
+            "assignments": [{"role": "PM", "code": "R"}, {"role": "PM", "code": "A"}],
+        }
+    )
+
+    assert codes_by_role(row, ["PM"]) == {"PM": "R, A"}

@@ -30,6 +30,15 @@ compare:
 health:
   title: Health dashboard
   overall: Overall
+  status: Status
+  rationale: Rationale
+
+export:
+  badge: Report type
+  generated: Generated
+  date_format: "%Y-%m-%d %H:%M UTC"
+  download_markdown: Download Markdown
+  download_html: Download HTML (print to PDF from your browser)
 
 risks:
   title: Risk register

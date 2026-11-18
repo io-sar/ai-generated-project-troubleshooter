@@ -4,7 +4,7 @@ Report text may come from a model, so it is shown with `plain()` or in a datafra
 never as Markdown or HTML.
 """
 
-import re
+from datetime import datetime
 from typing import Literal
 
 import streamlit as st
@@ -21,13 +21,20 @@ from troubleshooter.domain.models import (
     Sprint,
     StakeholderUpdates,
 )
-from troubleshooter.domain.raci import rows_without_one_accountable
+from troubleshooter.domain.raci import codes_by_role, roles_in_order, rows_without_one_accountable
 from troubleshooter.domain.scoring import (
     dimension_scores,
     label_for,
     overall_label,
     overall_score,
     risk_score,
+)
+from troubleshooter.export.markdown import escape_markdown as plain
+from troubleshooter.export.renderer import (
+    ExportInput,
+    TrustedMarkdown,
+    render_html,
+    render_markdown,
 )
 from troubleshooter.i18n import t
 
@@ -44,21 +51,6 @@ _LABEL_COLORS: dict[HealthLabel, BadgeColor] = {
     HealthLabel.PROBLEMATIC: "orange",
     HealthLabel.AT_RISK: "red",
 }
-
-# Everything Streamlit's Markdown treats as syntax, including :colour[] directives and $maths$.
-_MARKDOWN_SYNTAX = re.compile(r"([\\`*_{}\[\]()#+\-.!|<>~$:])")
-
-
-def plain(text: str) -> str:
-    """Escape Markdown so text shows exactly as written, with no links, images or styling.
-
-    Args:
-        text: Text that may come from a model or a visitor.
-
-    Returns:
-        The text with every Markdown character backslash-escaped.
-    """
-    return _MARKDOWN_SYNTAX.sub(r"\\\1", text)
 
 
 def render_badge(source: ReportSource) -> None:
@@ -140,19 +132,13 @@ def render_raci(raci: list[RaciRow]) -> None:
     """Show activities by roles, and flag rows that don't have exactly one Accountable."""
     st.subheader(t("raci.title"), anchor=False)
     broken = set(rows_without_one_accountable(raci))
-    roles = list(dict.fromkeys(a.role for row in raci for a in row.assignments))
-    rows = []
-    for position, row in enumerate(raci):
-        cells: dict[str, list[str]] = {role: [] for role in roles}
-        for assignment in row.assignments:
-            # A role listed twice keeps both codes rather than silently losing one.
-            cells[assignment.role].append(assignment.code)
-        check = t("raci.needs_one_a") if position in broken else ""
-        rows.append(
-            {t("raci.activity"): row.activity}
-            | {role: ", ".join(codes) for role, codes in cells.items()}
-            | {t("raci.check"): check}
-        )
+    roles = roles_in_order(raci)
+    rows = [
+        {t("raci.activity"): row.activity}
+        | codes_by_role(row, roles)
+        | {t("raci.check"): t("raci.needs_one_a") if position in broken else ""}
+        for position, row in enumerate(raci)
+    ]
     st.dataframe(rows, hide_index=True)
     if broken:
         names = ", ".join(raci[position].activity for position in sorted(broken))
@@ -251,3 +237,28 @@ def _render_sprint(heading: str, sprint: Sprint) -> None:
 def _label_badge(label: HealthLabel) -> str:
     # Markdown badge directive, so the badge can sit inline after its dimension name.
     return f":{_LABEL_COLORS[label]}-badge[{t(f'health_label.{label}')}]"
+
+
+def render_downloads(sample: Sample, generated_at: datetime) -> None:
+    """Offer the final version as Markdown and as print-ready HTML."""
+    data = ExportInput(
+        report=sample.final,
+        title=sample.title,
+        source=sample.badge,
+        scenario=sample.scenario,
+        generated_at=generated_at,
+        changes=TrustedMarkdown(sample.changes),
+    )
+    markdown_column, html_column = st.columns(2)
+    markdown_column.download_button(
+        t("export.download_markdown"),
+        data=render_markdown(data),
+        file_name=f"{sample.id}-report.md",
+        mime="text/markdown",
+    )
+    html_column.download_button(
+        t("export.download_html"),
+        data=render_html(data),
+        file_name=f"{sample.id}-report.html",
+        mime="text/html",
+    )

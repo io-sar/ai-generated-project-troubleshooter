@@ -260,3 +260,12 @@ def test_switching_back_shows_the_final_report_again() -> None:
 
     assert t("compare.draft") not in [element.value for element in app.header]
     assert len(app.dataframe[0].value) == 4
+
+
+def test_report_offers_markdown_and_html_downloads() -> None:
+    app = run_app(sample="placeholder")
+
+    assert [button.label for button in app.download_button] == [
+        t("export.download_markdown"),
+        t("export.download_html"),
+    ]

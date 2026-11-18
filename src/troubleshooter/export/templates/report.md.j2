@@ -1,0 +1,97 @@
+{#- Every {{ value }} is Markdown-escaped by the environment's finalize hook. -#}
+# {{ title }}
+
+{{ t("export.badge") }}: **{{ t("badge." ~ source) }}**
+
+{{ t("export.generated") }}: {{ generated }}
+
+## {{ t("report.scenario") }}
+
+{{ scenario.text }}
+
+{% if scenario.key_points %}
+### {{ t("report.key_points") }}
+
+{% for point in scenario.key_points %}
+- {{ point }}
+{% endfor %}
+
+{% endif %}
+## {{ t("health.title") }}
+
+{{ t("health.overall") }}: **{{ t("health_label." ~ overall) }}**
+
+| {{ t("hood.dimension") }} | {{ t("health.status") }} | {{ t("health.rationale") }} |
+|---|---|---|
+{% for d in dimensions %}
+| {{ t("dimension." ~ d.code) }} | {{ t("health_label." ~ d.label) }} | {{ d.rationale | one_line }} |
+{% endfor %}
+
+## {{ t("risks.title") }}
+
+| {{ t("risks.id") }} | {{ t("risks.description") }} | {{ t("risks.likelihood") }} | {{ t("risks.impact") }} | {{ t("risks.score") }} | {{ t("risks.owner") }} | {{ t("risks.mitigation") }} | {{ t("risks.escalation") }} | {{ t("risks.signals") }} |
+|---|---|---|---|---|---|---|---|---|
+{% for item in risks %}
+{% set risk = item.risk %}
+| {{ risk.id | one_line }} | {{ risk.description | one_line }} | {{ risk.likelihood }} | {{ risk.impact }} | {{ item.score }} | {{ risk.owner | one_line }} | {{ risk.mitigation | one_line }} | {{ t("escalation." ~ risk.escalation) }} | {{ risk.signal_ids | join(", ") | one_line }} |
+{% endfor %}
+
+## {{ t("plan.title") }}
+
+{{ t("plan.sequencing") }}
+
+{% for name, sprint in sprints %}
+### {{ t("plan." ~ name) }}
+
+{{ sprint.goal }}
+
+| {{ t("plan.action") }} | {{ t("plan.owner") }} | {{ t("plan.success_signal") }} |
+|---|---|---|
+{% for action in sprint.actions %}
+| {{ action.description | one_line }} | {{ action.owner | one_line }} | {{ action.success_signal | one_line }} |
+{% endfor %}
+
+{% endfor %}
+## {{ t("updates.title") }}
+
+{% for audience, text in updates %}
+### {{ t("updates." ~ audience) }}
+
+{{ text }}
+
+{% endfor %}
+## {{ t("memo.title") }}
+
+**{{ t("memo.context") }}**
+
+{{ memo.context }}
+
+| {{ t("memo.option") }} | {{ t("memo.trade_offs") }} |
+|---|---|
+{% for option in memo.options %}
+| {{ option.title | one_line }} | {{ option.trade_offs | one_line }} |
+{% endfor %}
+
+**{{ t("memo.recommendation") }}**
+
+{{ memo.recommendation }}
+
+**{{ t("memo.success_metrics") }}**
+
+{% for metric in memo.success_metrics %}
+- {{ metric }}
+{% endfor %}
+
+## {{ t("raci.title") }}
+
+| {{ t("raci.activity") }} |{% for role in roles %} {{ role | one_line }} |{% endfor %} {{ t("raci.check") }} |
+|---|{% for role in roles %}---|{% endfor %}---|
+{% for row in raci %}
+| {{ row.activity | one_line }} |{% for role in roles %} {{ row.cells[role] }} |{% endfor %} {{ t("raci.needs_one_a") if row.broken else "" }} |
+{% endfor %}
+{% if changes %}
+
+## {{ t("compare.changes") }}
+
+{{ changes }}
+{% endif %}

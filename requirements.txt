@@ -31,6 +31,7 @@ itsdangerous==2.2.0
     # via streamlit
 jinja2==3.1.6
     # via
+    #   ai-project-troubleshooter
     #   altair
     #   pydeck
 jsonschema==4.26.0

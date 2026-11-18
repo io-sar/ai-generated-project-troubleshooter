@@ -1,6 +1,6 @@
 import pytest
 
-from troubleshooter.ui.report_view import plain
+from troubleshooter.export.markdown import escape_markdown as plain
 
 
 @pytest.mark.parametrize(
