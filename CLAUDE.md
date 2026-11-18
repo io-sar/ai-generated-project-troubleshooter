@@ -22,7 +22,7 @@ This repo follows [Gitflow](https://www.atlassian.com/git/tutorials/comparing-wo
 - Track work as issues on the public GitHub Project board, using the task, risk and decision templates in `.github/ISSUE_TEMPLATE`.
 - Each milestone has about 5 to 10 issues, and each issue belongs to a GitHub milestone.
 - Use real data only. Never backdate or invent progress, risks or decisions.
-- Pull requests list their issues with `Refs #n`. Closing keywords only work on the default branch (`main`), so close issues by hand once the pull request reaches `develop`.
+- Pull requests list each issue they finish with its own `Closes #n`, so it links on the board and closes when the pull request merges into `develop`, the default branch. Use `Refs #n` for an issue that should stay open, such as one with an author task still to do.
 - Ask for approval before creating, editing or closing issues. Show the text first.
 - Risk ratings, status updates and retrospectives are the author's judgment. Claude only drafts them.
 
