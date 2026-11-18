@@ -9,6 +9,18 @@ app:
 nav:
   analyze: Analyze
 
+analyze:
+  sample_label: Sample scenario
+  button: Analyze
+
+report:
+  scenario: Scenario
+  key_points: Key points
+
+errors:
+  sample_not_found: That sample doesn't exist. Pick one from the list below.
+  no_samples: The samples can't be loaded right now. Please try again later.
+
 project_type:
   software_delivery: Software delivery
   ai_implementation: AI implementation
