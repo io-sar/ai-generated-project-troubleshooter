@@ -415,6 +415,32 @@ def test_saving_without_a_shown_sample_fails_clearly() -> None:
         state.save_risk_edits([])
 
 
+@pytest.mark.usefixtures("session")
+def test_editor_key_changes_when_the_report_changes() -> None:
+    sample = make_sample()
+    state.show_sample(sample)
+    shown = state.editor_key("risks")
+
+    assert state.editor_key("risks") == shown
+    state.save_risk_edits([])
+    saved = state.editor_key("risks")
+    state.show_sample(sample)
+
+    assert len({shown, saved, state.editor_key("risks")}) == 3
+
+
+@pytest.mark.usefixtures("session")
+def test_rejected_edit_keeps_the_editor_key() -> None:
+    # The same key keeps the visitor's pending changes in the table, so they can fix them.
+    state.show_sample(make_sample())
+    before = state.editor_key("risks")
+
+    with pytest.raises(EditRejected):
+        state.save_risk_edits([risk_data(likelihood=9)])
+
+    assert state.editor_key("risks") == before
+
+
 def test_drafts_are_never_edited(session: dict[str, Any]) -> None:
     sample = make_sample()
     state.show_sample(sample)

@@ -21,6 +21,7 @@ from troubleshooter.domain.scoring import label_for, risk_score, score_for, sugg
 
 _SAMPLE_KEY = "shown_sample"
 _EDITED_KEY = "edited_report"
+_EDIT_VERSION_KEY = "edit_version"
 
 # The risk fields a visitor's row may set. Anything else in the row, such as a display-only
 # risk score column, is not part of the risk.
@@ -206,6 +207,7 @@ def show_sample(sample: Sample) -> None:
     """Make this sample the report shown to the visitor, clearing any earlier edits."""
     st.session_state[_SAMPLE_KEY] = sample
     st.session_state.pop(_EDITED_KEY, None)
+    _new_edit_version()
 
 
 def shown_sample() -> Sample | None:
@@ -249,5 +251,20 @@ def _editable() -> tuple[Report, Report]:
     return sample.final, current
 
 
+def editor_key(name: str) -> str:
+    """The widget key for an editor, which changes whenever the shown report changes.
+
+    An editor keeps the visitor's pending changes as a diff against the table it was
+    given. A new key starts it fresh from the new report, so a diff is never applied twice
+    or to another sample.
+    """
+    return f"{name}_editor_{st.session_state.get(_EDIT_VERSION_KEY, 0)}"
+
+
+def _new_edit_version() -> None:
+    st.session_state[_EDIT_VERSION_KEY] = st.session_state.get(_EDIT_VERSION_KEY, 0) + 1
+
+
 def _save(report: Report) -> None:
     st.session_state[_EDITED_KEY] = report
+    _new_edit_version()

@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -87,18 +88,112 @@ def test_health_dashboard_shows_labels_not_numbers() -> None:
         assert not any(score in line for line in text)
 
 
-def test_risk_register_lists_final_risks_with_translated_escalation() -> None:
+def test_risk_register_lists_final_risks_with_their_scores_and_levels() -> None:
     app = run_app(sample="placeholder")
     risks = app.dataframe[0].value
 
-    assert list(risks[t("risks.id")]) == ["R1", "R2", "R3", "R4"]
-    assert list(risks[t("risks.score")]) == [20, 16, 9, 16]
-    assert list(risks[t("risks.escalation")]) == [
+    assert list(risks["id"]) == ["R1", "R2", "R3", "R4"]
+    assert list(risks["score"]) == [20, 16, 9, 16]
+    # The editor holds codes; its dropdown shows them translated.
+    assert list(risks["escalation"]) == ["steering", "sponsor", "pm", "sponsor"]
+    assert list(risks["suggested"]) == [
         t("escalation.steering"),
         t("escalation.sponsor"),
         t("escalation.pm"),
         t("escalation.sponsor"),
     ]
+    assert list(risks["edited"]) == ["", "", "", ""]
+
+
+def edit_risks(app: AppTest, delta: dict[str, Any]) -> AppTest:
+    """Make edits in the risk editor, as a visitor would, then click Apply."""
+    editor = app.data_editor[0]
+    assert editor.key is not None
+    app.session_state[editor.key] = {
+        "edited_rows": {},
+        "added_rows": [],
+        "deleted_rows": [],
+    } | delta
+    apply_button(app).click().run()
+    return app
+
+
+def apply_button(app: AppTest) -> Any:
+    return next(button for button in app.button if button.label == t("edit.apply"))
+
+
+def test_final_view_has_one_editable_risk_table() -> None:
+    app = run_app(sample="placeholder")
+
+    assert len(app.data_editor) == 1
+    assert app.data_editor[0].editing_mode == "dynamic"
+
+
+def test_applied_risk_edit_updates_the_score_and_shows_the_marker() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_risks(app, {"edited_rows": {2: {"impact": 5}}})
+
+    risks = app.dataframe[0].value
+    assert not app.exception and not app.error
+    assert list(risks["score"]) == [20, 16, 15, 16]
+    assert list(risks["edited"]) == ["", "", t("edit.marker"), ""]
+    # Under the hood reads the same edited report, so nothing else changed there.
+    assert list(app.dataframe[6].value[t("hood.score")]) == [30, 65, 40, 50, 35, 44]
+
+
+def test_added_risk_gets_an_id_and_the_suggested_level() -> None:
+    app = run_app(sample="placeholder")
+    new = {
+        "description": "Key engineer leaves.",
+        "likelihood": 2,
+        "impact": 3,
+        "owner": "PM",
+        "mitigation": "Pair on the cutover scripts.",
+    }
+
+    edit_risks(app, {"added_rows": [new]})
+
+    risks = app.dataframe[0].value
+    assert not app.error
+    assert list(risks["id"])[-1] == "R5"
+    assert list(risks["escalation"])[-1] == "pm"
+    assert list(risks["edited"])[-1] == t("edit.marker")
+
+
+def test_deleted_risk_is_gone() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_risks(app, {"deleted_rows": [0]})
+
+    assert list(app.dataframe[0].value["id"]) == ["R2", "R3", "R4"]
+
+
+def test_invalid_risk_edit_shows_an_error_and_changes_nothing() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_risks(app, {"edited_rows": {1: {"likelihood": 9}}})
+
+    assert not app.exception
+    assert app.error[0].value == t("edit.rejected", row=2, column=t("risks.likelihood"))
+    # The table is drawn from the unchanged report, with the visitor's edit kept on top
+    # under the same key so they can fix it.
+    risks = app.dataframe[0].value
+    assert list(risks["likelihood"]) == [4, 4, 3, 4]
+    assert list(risks["edited"]) == ["", "", "", ""]
+    key = app.data_editor[0].key
+    assert key is not None
+    assert app.session_state[key]["edited_rows"]
+
+
+def test_compare_view_shows_the_edited_final_read_only() -> None:
+    app = run_app(sample="placeholder")
+    edit_risks(app, {"deleted_rows": [3]})
+
+    app.segmented_control[0].set_value("compare").run()
+
+    assert not app.data_editor
+    assert [len(app.dataframe[0].value), len(app.dataframe[6].value)] == [3, 3]
 
 
 def test_recovery_plan_shows_three_sprints_in_order() -> None:

@@ -5,11 +5,11 @@ never as Markdown or HTML.
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 import streamlit as st
 
-from troubleshooter.domain.codes import Dimension, HealthLabel, ReportSource
+from troubleshooter.domain.codes import Dimension, EscalationLevel, HealthLabel, ReportSource
 from troubleshooter.domain.models import (
     DecisionMemo,
     Diagnosis,
@@ -28,6 +28,7 @@ from troubleshooter.domain.scoring import (
     overall_label,
     overall_score,
     risk_score,
+    suggested_escalation,
 )
 from troubleshooter.export.markdown import escape_markdown as plain
 from troubleshooter.export.renderer import (
@@ -37,6 +38,8 @@ from troubleshooter.export.renderer import (
     render_markdown,
 )
 from troubleshooter.i18n import t
+from troubleshooter.ui import state
+from troubleshooter.ui.state import EditRejected
 
 BadgeColor = Literal["green", "blue", "orange", "red"]
 
@@ -69,9 +72,10 @@ def render_report_header(sample: Sample) -> None:
         st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
 
 
-def render_comparison(sample: Sample) -> None:
+def render_comparison(sample: Sample, final: Report) -> None:
     """Show the "What I changed" note, then the AI draft and the final version side by side.
 
+    `final` is the final version with any of the visitor's edits, shown read-only here.
     Streamlit stacks the two columns on narrow screens, so phones read them one after
     the other.
     """
@@ -85,13 +89,19 @@ def render_comparison(sample: Sample) -> None:
         render_report(sample.draft)
     with final_column:
         st.header(t("compare.final"), anchor=False)
-        render_report(sample.final)
+        render_report(final)
 
 
-def render_report(report: Report) -> None:
-    """Show every report section, in reading order."""
+def render_report(report: Report, *, editable: bool = False) -> None:
+    """Show every report section, in reading order.
+
+    Pass `editable=True` only for the final version: the AI draft is never edited.
+    """
     render_health(report.health)
-    render_risks(report.risks)
+    if editable:
+        render_risk_editor(report.risks)
+    else:
+        render_risks(report.risks)
     render_recovery_plan(report)
     render_stakeholder_updates(report.stakeholder_updates)
     render_decision_memo(report.decision_memo)
@@ -205,6 +215,89 @@ def render_risks(risks: list[Risk]) -> None:
         for risk in risks
     ]
     st.dataframe(rows, hide_index=True)
+
+
+# Risk editor columns, keyed by code; derived and display-only columns can't be edited.
+_RISK_LABELS = {
+    "id": "risks.id",
+    "description": "risks.description",
+    "likelihood": "risks.likelihood",
+    "impact": "risks.impact",
+    "score": "risks.score",
+    "owner": "risks.owner",
+    "mitigation": "risks.mitigation",
+    "escalation": "risks.escalation",
+    "suggested": "risks.suggested",
+    "signals": "risks.signals",
+    "edited": "edit.column",
+}
+_RISK_READ_ONLY = ["id", "score", "suggested", "signals", "edited"]
+
+
+def render_risk_editor(risks: list[Risk]) -> None:
+    """Show the risk register as an editable table, applied with one button.
+
+    Edits are applied together so a visitor can fill a new row cell by cell. A rejected
+    edit stays in the table, so the visitor can fix it.
+    """
+    st.subheader(t("risks.title"), anchor=False)
+    st.caption(t("edit.help"))
+    with st.form("risk_form", border=False):
+        edited = st.data_editor(
+            [_risk_row(risk) for risk in risks],
+            column_config=_risk_columns(),
+            disabled=_RISK_READ_ONLY,
+            num_rows="dynamic",
+            hide_index=True,
+            key=state.editor_key("risks"),
+        )
+        applied = st.form_submit_button(t("edit.apply"))
+    if not applied:
+        return
+    try:
+        state.save_risk_edits(edited)
+    except EditRejected as rejected:
+        column = t(_RISK_LABELS[rejected.field])
+        st.error(t("edit.rejected", row=rejected.row, column=column))
+        return
+    st.rerun()
+
+
+def _risk_row(risk: Risk) -> dict[str, object]:
+    score = risk_score(risk)
+    return {
+        "id": risk.id,
+        "description": risk.description,
+        "likelihood": risk.likelihood,
+        "impact": risk.impact,
+        "score": score,
+        "owner": risk.owner,
+        "mitigation": risk.mitigation,
+        "escalation": risk.escalation.value,
+        "suggested": t(f"escalation.{suggested_escalation(score)}"),
+        # Display text under its own key, which the state layer ignores, so the risk keeps
+        # its links and new risks start with none.
+        "signals": ", ".join(risk.signal_ids),
+        "edited": t("edit.marker") if risk.human_adjusted else "",
+    }
+
+
+def _risk_columns() -> dict[str, Any]:
+    labels = {name: t(key) for name, key in _RISK_LABELS.items()}
+    return labels | {
+        "likelihood": _rating_column(labels["likelihood"]),
+        "impact": _rating_column(labels["impact"]),
+        "escalation": st.column_config.SelectboxColumn(
+            labels["escalation"],
+            options=[level.value for level in EscalationLevel],
+            format_func=lambda code: t(f"escalation.{code}"),
+        ),
+    }
+
+
+def _rating_column(label: str) -> Any:
+    # The editor's own limits; the state layer checks them again when edits are applied.
+    return st.column_config.NumberColumn(label, min_value=1, max_value=5, step=1)
 
 
 def render_recovery_plan(report: Report) -> None:
