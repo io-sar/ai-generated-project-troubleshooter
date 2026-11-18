@@ -133,6 +133,13 @@ def test_size_is_within_both_providers_limits(schema: dict[str, Any]) -> None:
     assert len(unions) <= CLAUDE_MAX_UNION_PARAMETERS
 
 
+def test_human_edit_fields_never_reach_the_model(schema: dict[str, Any]) -> None:
+    # Only a person sets these, so the model must not be offered them (ADR 0005).
+    fields = {name for node in schemas(schema) for name in node.get("properties", {})}
+
+    assert not fields & {"human_adjusted", "note"}
+
+
 def test_moved_limits_still_reach_the_model() -> None:
     risk = portable_schema(Report.model_json_schema())["$defs"]["Risk"]
 

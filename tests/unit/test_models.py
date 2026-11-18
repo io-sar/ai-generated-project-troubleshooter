@@ -147,6 +147,35 @@ def test_raci_row_without_an_accountable_still_loads() -> None:
     assert Report.model_validate(data).raci[0].assignments[0].code is RaciCode.RESPONSIBLE
 
 
+def test_items_start_without_human_adjusted_markers() -> None:
+    report = Report.model_validate(report_data())
+
+    assert not report.risks[0].human_adjusted
+    assert not report.raci[0].human_adjusted
+    assert not report.health.schedule.human_adjusted
+    assert report.health.schedule.note is None
+
+
+def test_markers_and_note_round_trip_through_json() -> None:
+    data = report_data()
+    data["risks"][0]["human_adjusted"] = True
+    data["raci"][0]["human_adjusted"] = True
+    data["health"]["schedule"] |= {"human_adjusted": True, "note": "Vendor fixed the date."}
+    report = Report.model_validate(data)
+
+    loaded = Report.model_validate_json(report.model_dump_json())
+
+    assert loaded.risks[0].human_adjusted and loaded.raci[0].human_adjusted
+    assert loaded.health.schedule.note == "Vendor fixed the date."
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_note_is_rejected(blank: str) -> None:
+    # No note is None; an empty string would show an empty note in the export.
+    with pytest.raises(ValidationError):
+        DimensionHealth.model_validate(health_data(50) | {"note": blank})
+
+
 def test_diagnosis_loads_with_its_classification() -> None:
     diagnosis = Diagnosis.model_validate(diagnosis_data())
 

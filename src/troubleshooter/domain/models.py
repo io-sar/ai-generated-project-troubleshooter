@@ -11,6 +11,7 @@ Derived values (labels, overall rating, risk score) are calculated in `scoring`,
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic.json_schema import SkipJsonSchema
 
 from troubleshooter.domain.codes import (
     EscalationLevel,
@@ -25,6 +26,11 @@ SCENARIO_MAX_CHARS = 4000
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 Score = Annotated[int, Field(ge=0, le=100)]
 Rating = Annotated[int, Field(ge=1, le=5)]
+
+# Human edits live on the report so the app and the export read one object (ADR 0005).
+# They are left out of the JSON Schema, so the LLM is never offered them.
+HumanAdjusted = SkipJsonSchema[bool]
+HumanNote = SkipJsonSchema[Text | None]
 
 
 class DomainModel(BaseModel):
@@ -56,6 +62,9 @@ class Diagnosis(DomainModel):
 class DimensionHealth(DomainModel):
     score: Score
     rationale: Text
+    human_adjusted: HumanAdjusted = False
+    # The visitor's note sits beside the AI rationale, which stays unchanged.
+    note: HumanNote = None
 
 
 class HealthScores(DomainModel):
@@ -75,6 +84,7 @@ class Risk(DomainModel):
     mitigation: Text
     escalation: EscalationLevel
     signal_ids: list[Text]
+    human_adjusted: HumanAdjusted = False
 
 
 class Action(DomainModel):
@@ -126,6 +136,7 @@ class RaciRow(DomainModel):
     # so the app can show a warning instead of rejecting the report.
     activity: Text
     assignments: list[RaciAssignment]
+    human_adjusted: HumanAdjusted = False
 
 
 class Report(DomainModel):
