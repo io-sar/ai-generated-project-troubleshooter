@@ -1,0 +1,184 @@
+# English UI text. Keys are looked up with t("section.key").
+# Code sections (project_type, dimension, ...) must cover every value of the
+# matching enum in troubleshooter.domain.codes; a test checks this.
+
+app:
+  title: AI Project Troubleshooter
+  version: Version {version}
+
+nav:
+  analyze: Analyze
+  how_built: How this was built
+
+about:
+  title: About the builder
+  name: I. Sarantidis
+  role: Technical Project Manager | Engineering Manager | Technical Product Owner
+  linkedin: LinkedIn profile
+  repo: Source code on GitHub
+
+how:
+  link: How this was built with Claude Code
+  title: How this was built
+  intro: >-
+    This app was built with Claude Code, an AI coding tool. The delivery judgment is
+    the author's: scope, priorities, decisions and the corrections to each sample
+    report. Claude wrote most of the code and tests, and the author reviewed them.
+  split_title: Who did what
+  managed_title: How the project is managed
+  managed_intro: >-
+    The project is run with the same methods the app teaches, and the records are
+    public: the plan, the board of tasks, risks and decisions, and the decision records.
+  checks_title: How the code is checked
+  checks_intro: >-
+    Every change runs linting, strict type checks, import rules and the test suite in
+    CI. The tests never call a real AI provider, so they need no API key.
+  raci:
+    activity: Activity
+    author: Author
+    claude: Claude
+    legend: R is responsible, A is accountable, C is consulted.
+    scope: Scope, priorities and decisions
+    code: Code and tests
+    scenarios: Sample scenario text
+    corrections: Corrections to sample reports and "What I changed" notes
+    greek: Review of Greek UI text
+    reviews: Status updates and retrospectives
+  links:
+    spec: Spec (requirements)
+    roadmap: Roadmap (milestones and status)
+    board: Project board (tasks, risks and decisions)
+    adrs: Architecture decision records
+    tests: Tests
+    ci: CI checks
+    repo: Full source code on GitHub
+
+analyze:
+  sample_label: Sample scenario
+  button: Analyze
+
+report:
+  scenario: Scenario
+  key_points: Key points
+
+view:
+  label: Report view
+  final: Final report
+  compare: Compare AI draft and final
+
+compare:
+  changes: What I changed
+  draft: AI draft
+  final: Final version
+
+health:
+  title: Health dashboard
+  overall: Overall
+  status: Status
+  rationale: Rationale
+
+export:
+  badge: Report type
+  generated: Generated
+  date_format: "%Y-%m-%d %H:%M UTC"
+  download_markdown: Download Markdown
+  download_html: Download HTML (print to PDF from your browser)
+
+risks:
+  title: Risk register
+  id: ID
+  description: Risk
+  likelihood: Likelihood
+  impact: Impact
+  score: Score
+  owner: Owner
+  mitigation: Mitigation
+  escalation: Escalation
+  signals: Signals
+
+plan:
+  title: Recovery plan
+  sequencing: The three sprints are sequenced for the best fix and use of resources.
+  stabilize: "Sprint 1, weeks 1–2: Stabilize"
+  recover: "Sprint 2, weeks 3–4: Recover"
+  sustain: "Sprint 3, weeks 5–6: Sustain"
+  action: Action
+  owner: Owner
+  success_signal: Success signal
+
+updates:
+  title: Stakeholder updates
+  executive: Executive
+  delivery_team: Delivery team
+  customer: Customer
+
+memo:
+  title: Decision memo
+  context: Context
+  option: Option
+  trade_offs: Trade-offs
+  recommendation: Recommendation
+  success_metrics: Success metrics
+
+raci:
+  title: RACI matrix
+  activity: Activity
+  check: Check
+  needs_one_a: Needs exactly one A
+  warning: "These activities need exactly one Accountable (A): {activities}"
+  R: Responsible
+  A: Accountable
+  C: Consulted
+  I: Informed
+
+hood:
+  title: Under the hood
+  engine: Engine
+  sample_engine: Stored sample
+  scores: Health scores (0–100, higher is healthier)
+  dimension: Dimension
+  score: Score
+  signals: Signals from the diagnosis
+  signal_id: ID
+  observation: Observation
+  evidence: Evidence
+  diagnosis: Diagnosis JSON
+
+errors:
+  sample_not_found: That sample doesn't exist. Pick one from the list below.
+  no_samples: The samples can't be loaded right now. Please try again later.
+
+project_type:
+  software_delivery: Software delivery
+  ai_implementation: AI implementation
+  service_migration: Service migration
+  product_launch: Product launch
+
+dimension:
+  schedule: Schedule
+  scope: Scope
+  quality: Quality
+  risk_control: Risk control
+  stakeholder_confidence: Stakeholder confidence
+
+health_label:
+  good: Good
+  problematic: Problematic
+  at_risk: At Risk
+
+escalation:
+  team: Team
+  pm: PM
+  sponsor: Sponsor
+  steering: Steering
+
+badge:
+  recorded: Recorded AI run, reviewed by the author
+  live: Live AI
+  placeholder: Placeholder, not a real run
+
+input_classification:
+  troubled: Troubled project
+  healthy: Healthy project
+  too_thin: Not enough detail
+  off_topic: Not a project scenario

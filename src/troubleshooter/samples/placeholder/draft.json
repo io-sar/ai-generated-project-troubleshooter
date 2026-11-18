@@ -1,0 +1,102 @@
+{
+  "health": {
+    "schedule": {"score": 30, "rationale": "Cutover has slipped twice and the end-of-April deadline is close."},
+    "scope": {"score": 65, "rationale": "Scope is stable: the same CRM features are being moved."},
+    "quality": {"score": 40, "rationale": "12% of records fail validation in the trial load."},
+    "risk_control": {"score": 50, "rationale": "Risks are known but have no owners or dates yet."},
+    "stakeholder_confidence": {"score": 45, "rationale": "The support manager is worried and the sponsor's date is at odds with readiness."}
+  },
+  "risks": [
+    {
+      "id": "R1",
+      "description": "Schema knowledge is lost when the database administrator leaves.",
+      "likelihood": 4,
+      "impact": 5,
+      "owner": "IT manager",
+      "mitigation": "Pair a second engineer with the administrator and record the schema mapping.",
+      "escalation": "steering",
+      "signal_ids": ["S3"]
+    },
+    {
+      "id": "R2",
+      "description": "Bad records stop the final data load.",
+      "likelihood": 3,
+      "impact": 4,
+      "owner": "Data lead",
+      "mitigation": "Clean duplicates and country codes before the next trial load.",
+      "escalation": "sponsor",
+      "signal_ids": ["S2"]
+    },
+    {
+      "id": "R3",
+      "description": "Untrained agents slow down support in the busy season.",
+      "likelihood": 3,
+      "impact": 3,
+      "owner": "Support manager",
+      "mitigation": "Run training sessions in the two weeks before cutover.",
+      "escalation": "pm",
+      "signal_ids": ["S4"]
+    }
+  ],
+  "recovery_plan": {
+    "stabilize": {
+      "goal": "Protect the knowledge and data the migration depends on.",
+      "actions": [
+        {"description": "Start a knowledge handover from the database administrator.", "owner": "IT manager", "success_signal": "A second engineer can explain every mapped table."},
+        {"description": "Classify all failing records by cause.", "owner": "Data lead", "success_signal": "Every failing record has a known cause."}
+      ]
+    },
+    "recover": {
+      "goal": "Get the data and the people ready for cutover.",
+      "actions": [
+        {"description": "Fix duplicates and missing country codes, then rerun the trial load.", "owner": "Data lead", "success_signal": "Under 1% of records fail validation."},
+        {"description": "Train all agents on the new CRM.", "owner": "Support manager", "success_signal": "Every agent completes training."}
+      ]
+    },
+    "sustain": {
+      "goal": "Cut over safely and keep support running.",
+      "actions": [
+        {"description": "Cut over with a tested rollback plan.", "owner": "Project manager", "success_signal": "Support runs on the new CRM with no lost tickets."}
+      ]
+    }
+  },
+  "stakeholder_updates": {
+    "executive": "The CRM migration is behind plan. A trial data load showed that 12% of customer records fail validation, the database administrator who knows the old system is leaving in five weeks, and agent training has not started. We have a six-week recovery plan that protects knowledge first, then fixes the data and trains agents, and then cuts over with a rollback plan. The end-of-April switch-off is at risk, and we will confirm the new date after the next trial load.",
+    "delivery_team": "Our focus for the next two weeks is the schema handover and sorting failing records by cause. New feature requests are on hold until cutover.",
+    "customer": "We are moving our support system to a new platform. You may see a short change in how we contact you, and we will tell you before it happens."
+  },
+  "decision_memo": {
+    "context": "The old CRM licence ends in April, but data quality and training mean a safe cutover before then is unlikely.",
+    "options": [
+      {"title": "Keep the April date", "trade_offs": "Avoids a licence renewal, but risks bad data and untrained agents at the start of the busy season."},
+      {"title": "Extend the licence by two months", "trade_offs": "Costs a renewal, but allows clean data and trained agents before cutover."}
+    ],
+    "recommendation": "Extend the licence by two months and cut over in June.",
+    "success_metrics": ["Under 1% of records fail validation.", "All agents trained before cutover."]
+  },
+  "raci": [
+    {
+      "activity": "Schema handover",
+      "assignments": [
+        {"role": "IT manager", "code": "A"},
+        {"role": "Database administrator", "code": "R"},
+        {"role": "Project manager", "code": "I"}
+      ]
+    },
+    {
+      "activity": "Data cleaning",
+      "assignments": [
+        {"role": "Data lead", "code": "A"},
+        {"role": "Support manager", "code": "C"}
+      ]
+    },
+    {
+      "activity": "Cutover decision",
+      "assignments": [
+        {"role": "Sponsor", "code": "A"},
+        {"role": "Project manager", "code": "R"},
+        {"role": "Support manager", "code": "C"}
+      ]
+    }
+  ]
+}

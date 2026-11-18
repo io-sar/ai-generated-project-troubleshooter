@@ -4,9 +4,9 @@
 On-demand reference: not loaded automatically. The rules Claude follows are in CLAUDE.md. -->
 
 ## Traceable work
-- **Rule:** Each milestone has a `feature/*` branch named in the roadmap. Pull requests list their issues with `Refs #n`, and issues are closed by hand once the pull request reaches `develop`.
-- **Why:** Anyone can trace why a change exists.
-- **Decision:** Kept the current convention instead of per-issue branches and `Closes #n`, because closing keywords only work on the default branch (`main`).
+- **Rule:** Each milestone has a `feature/*` branch named in the roadmap. Pull requests list each issue they finish with its own `Closes #n`, and use `Refs #n` for an issue that stays open.
+- **Why:** Anyone can trace why a change exists, and the board shows each issue's pull request.
+- **Decision:** Kept milestone branches instead of per-issue branches. On 2026-11-18 `develop` became the default branch, because closing keywords only link and close issues in pull requests to the default branch. Until then, issues were listed with `Refs #n` and closed by hand.
 - **Status:** Kept current (CLAUDE.md "Git workflow" and "Issues and the board").
 
 ## Small batches

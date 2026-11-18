@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placeholder: CRM migration running late</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f2328; background: #fff; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  h1 { margin-bottom: 0.25rem; }
+  h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.25rem; margin-top: 2rem; }
+  table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid #d0d7de; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  .meta { color: #59636e; margin: 0.25rem 0; }
+  .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.85rem; border: 1px solid currentColor; }
+  .good, .recorded { color: #1a7f37; background: #dafbe1; }
+  .problematic, .placeholder { color: #9a6700; background: #fff8c5; }
+  .at_risk { color: #cf222e; background: #ffebe9; }
+  .live { color: #0969da; background: #ddf4ff; }
+  .warning { color: #cf222e; font-weight: 600; }
+  .scenario, .update, .note { white-space: pre-wrap; }
+  .update { background: #f6f8fa; border-radius: 0.375rem; padding: 0.75rem; }
+  @media print {
+    body { margin: 0; max-width: none; font-size: 10pt; }
+    h2 { break-after: avoid; }
+    table, tr, .update { break-inside: avoid; }
+    .badge { border-width: 2px; }
+  }
+</style>
+</head>
+<body>
+<h1>Placeholder: CRM migration running late</h1>
+<p class="meta">Report type: <span class="badge placeholder">Placeholder, not a real run</span></p>
+<p class="meta">Generated: 2026-01-02 03:04 UTC</p>
+
+<h2>Scenario</h2>
+<p class="scenario">We are moving our customer support team from an on-premise CRM to a cloud service. Cutover was planned for 1 March and has already moved twice. A trial data load found that 12% of customer records fail validation, mostly duplicate contacts and missing country codes. The only database administrator who knows the old schema has handed in their notice and leaves in five weeks. The support manager says agents haven&#39;t been trained yet and is worried about the busy season starting in May. The sponsor still expects the old system to be switched off by the end of April to avoid another licence renewal.</p>
+<h3>Key points</h3>
+<ul>
+  <li>Cutover has slipped twice and the licence deadline is fixed.</li>
+  <li>Data quality blocks the migration.</li>
+  <li>The only person who knows the old schema is leaving.</li>
+  <li>Agents are untrained ahead of the busy season.</li>
+</ul>
+
+<h2>Health dashboard</h2>
+<p>Overall: <span class="badge problematic">Problematic</span></p>
+<table>
+  <tr><th>Dimension</th><th>Status</th><th>Rationale</th></tr>
+  <tr><td>Schedule</td><td><span class="badge at_risk">At Risk</span></td><td>Cutover has slipped twice and the end-of-April deadline is close.</td></tr>
+  <tr><td>Scope</td><td><span class="badge problematic">Problematic</span></td><td>Scope is stable: the same CRM features are being moved.</td></tr>
+  <tr><td>Quality</td><td><span class="badge problematic">Problematic</span></td><td>12% of records fail validation in the trial load.</td></tr>
+  <tr><td>Risk control</td><td><span class="badge problematic">Problematic</span></td><td>Risks are known but have no owners or dates yet.</td></tr>
+  <tr><td>Stakeholder confidence</td><td><span class="badge at_risk">At Risk</span></td><td>The sponsor&#39;s date and the support manager&#39;s concerns pull in opposite directions, and nobody has decided between them.</td></tr>
+</table>
+
+<h2>Risk register</h2>
+<table>
+  <tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Score</th><th>Owner</th><th>Mitigation</th><th>Escalation</th><th>Signals</th></tr>
+  <tr><td>R1</td><td>Schema knowledge is lost when the database administrator leaves.</td><td>4</td><td>5</td><td>20</td><td>IT manager</td><td>Pair a second engineer with the administrator and record the schema mapping.</td><td>Steering</td><td>S3</td></tr>
+  <tr><td>R2</td><td>Bad records stop the final data load.</td><td>4</td><td>4</td><td>16</td><td>Data lead</td><td>Clean duplicates and country codes before the next trial load.</td><td>Sponsor</td><td>S2</td></tr>
+  <tr><td>R3</td><td>Untrained agents slow down support in the busy season.</td><td>3</td><td>3</td><td>9</td><td>Support manager</td><td>Run training sessions in the two weeks before cutover.</td><td>PM</td><td>S4</td></tr>
+  <tr><td>R4</td><td>The licence deadline forces cutover before the data and agents are ready.</td><td>4</td><td>4</td><td>16</td><td>Sponsor</td><td>Ask the vendor for a month-by-month licence extension before the decision meeting.</td><td>Sponsor</td><td>S5, S4</td></tr>
+</table>
+
+<h2>Recovery plan</h2>
+<p>The three sprints are sequenced for the best fix and use of resources.</p>
+<h3>Sprint 1, weeks 1–2: Stabilize</h3>
+<p>Protect the knowledge and data the migration depends on.</p>
+<table>
+  <tr><th>Action</th><th>Owner</th><th>Success signal</th></tr>
+  <tr><td>Start a knowledge handover from the database administrator.</td><td>IT manager</td><td>A second engineer can explain every mapped table.</td></tr>
+  <tr><td>Classify all failing records by cause.</td><td>Data lead</td><td>Every failing record has a known cause.</td></tr>
+</table>
+<h3>Sprint 2, weeks 3–4: Recover</h3>
+<p>Get the data and the people ready for cutover.</p>
+<table>
+  <tr><th>Action</th><th>Owner</th><th>Success signal</th></tr>
+  <tr><td>Fix duplicates and missing country codes, then rerun the trial load.</td><td>Data lead</td><td>Under 1% of records fail validation.</td></tr>
+  <tr><td>Train all agents on the new CRM.</td><td>Support manager</td><td>Every agent completes training.</td></tr>
+</table>
+<h3>Sprint 3, weeks 5–6: Sustain</h3>
+<p>Cut over safely and keep support running.</p>
+<table>
+  <tr><th>Action</th><th>Owner</th><th>Success signal</th></tr>
+  <tr><td>Cut over with a tested rollback plan.</td><td>Project manager</td><td>Support runs on the new CRM with no lost tickets.</td></tr>
+</table>
+
+<h2>Stakeholder updates</h2>
+<h3>Executive</h3>
+<p class="update">The CRM migration will miss the end-of-April switch-off. Data quality and untrained agents make an April cutover unsafe in the busy season. We recommend extending the licence by two months and cutting over in June. Decision needed at the next steering meeting.</p>
+<h3>Delivery team</h3>
+<p class="update">Our focus for the next two weeks is the schema handover and sorting failing records by cause. New feature requests are on hold until cutover.</p>
+<h3>Customer</h3>
+<p class="update">We are moving our support system to a new platform. You may see a short change in how we contact you, and we will tell you before it happens.</p>
+
+<h2>Decision memo</h2>
+<h3>Context</h3>
+<p>The old CRM licence ends in April, but data quality and training mean a safe cutover before then is unlikely.</p>
+<table>
+  <tr><th>Option</th><th>Trade-offs</th></tr>
+  <tr><td>Keep the April date</td><td>Avoids a licence renewal, but risks bad data and untrained agents at the start of the busy season.</td></tr>
+  <tr><td>Extend the licence by two months</td><td>Costs a renewal, but allows clean data and trained agents before cutover.</td></tr>
+</table>
+<h3>Recommendation</h3>
+<p>Extend the licence by two months and cut over in June.</p>
+<h3>Success metrics</h3>
+<ul>
+  <li>Under 1% of records fail validation.</li>
+  <li>All agents trained before cutover.</li>
+</ul>
+
+<h2>RACI matrix</h2>
+<table>
+  <tr><th>Activity</th><th>IT manager</th><th>Database administrator</th><th>Project manager</th><th>Data lead</th><th>Data analyst</th><th>Support manager</th><th>Sponsor</th><th>Check</th></tr>
+  <tr><td>Schema handover</td><td>A</td><td>R</td><td>I</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Data cleaning</td><td></td><td></td><td></td><td>A</td><td>R</td><td>C</td><td></td><td></td></tr>
+  <tr><td>Cutover decision</td><td></td><td></td><td>R</td><td></td><td></td><td>C</td><td>A</td><td></td></tr>
+</table>
+
+<h2>What I changed</h2>
+<p class="note">*Placeholder note, written by Claude to test the layout. The notes on real samples are the author&#39;s own.*
+
+- **Added risk R4** for the fixed licence deadline. The draft named it in the decision memo but never put it in the risk register.
+- **Raised R2&#39;s likelihood from 3 to 4.** One record in eight failing validation is not a medium-likelihood problem.
+- **Lowered stakeholder confidence to At Risk.** The sponsor and the support manager want different things, and that conflict is the real blocker.
+- **Rewrote the executive update** to lead with the decision needed, not the history.
+- **Gave data cleaning a Responsible role** in the RACI. The draft had an owner but nobody doing the work.</p>
+</body>
+</html>

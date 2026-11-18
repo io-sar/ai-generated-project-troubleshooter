@@ -2,7 +2,7 @@
 What this change does and why.
 
 ## Issues
-Refs #
+Closes #
 
 ## Testing
 What was run, and the results.

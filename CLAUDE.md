@@ -22,7 +22,7 @@ This repo follows [Gitflow](https://www.atlassian.com/git/tutorials/comparing-wo
 - Track work as issues on the public GitHub Project board, using the task, risk and decision templates in `.github/ISSUE_TEMPLATE`.
 - Each milestone has about 5 to 10 issues, and each issue belongs to a GitHub milestone.
 - Use real data only. Never backdate or invent progress, risks or decisions.
-- Pull requests list their issues with `Refs #n`. Closing keywords only work on the default branch (`main`), so close issues by hand once the pull request reaches `develop`.
+- Pull requests list each issue they finish with its own `Closes #n`, so it links on the board and closes when the pull request merges into `develop`, the default branch. Use `Refs #n` for an issue that should stay open, such as one with an author task still to do.
 - Ask for approval before creating, editing or closing issues. Show the text first.
 - Risk ratings, status updates and retrospectives are the author's judgment. Claude only drafts them.
 
@@ -33,6 +33,8 @@ Never write these, because they must be the author's own judgment:
 - Corrections to the final version of a sample.
 
 Scenario text can be drafted by AI. The author reviews all Greek UI text.
+
+Exception: Claude writes the whole M2 placeholder sample, including its draft, final version and "What I changed" note. It carries the placeholder badge, is exempt from the `draft.json` rule, and is removed in M5, before release 0.1.
 
 ## Rules that must not break
 - **Secrets:** no key in code or the repo. Visitor keys live only in `st.session_state` and never reach logs, disk, exceptions or exports.

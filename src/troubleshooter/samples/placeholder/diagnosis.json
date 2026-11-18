@@ -1,0 +1,35 @@
+{
+  "classification": "troubled",
+  "summary": "A CRM migration with a fixed licence deadline is blocked by poor data quality, depends on one leaving expert, and has no agent training plan.",
+  "signals": [
+    {
+      "id": "S1",
+      "observation": "The cutover date has slipped twice.",
+      "evidence": "Cutover was planned for 1 March and has already moved twice."
+    },
+    {
+      "id": "S2",
+      "observation": "Data quality blocks the migration.",
+      "evidence": "A trial data load found that 12% of customer records fail validation."
+    },
+    {
+      "id": "S3",
+      "observation": "Knowledge of the old system rests on one person who is leaving.",
+      "evidence": "The only database administrator who knows the old schema leaves in five weeks."
+    },
+    {
+      "id": "S4",
+      "observation": "Users are not ready.",
+      "evidence": "Agents haven't been trained yet, and the busy season starts in May."
+    },
+    {
+      "id": "S5",
+      "observation": "The end date is fixed by a contract, not by readiness.",
+      "evidence": "The sponsor expects the old system off by the end of April to avoid another licence renewal."
+    }
+  ],
+  "things_to_watch": [
+    "Whether the licence can be extended month by month.",
+    "How many failing records are duplicates that can be merged automatically."
+  ]
+}

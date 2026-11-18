@@ -10,13 +10,14 @@ Derived values (labels, overall rating, risk score) are calculated in `scoring`,
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from troubleshooter.domain.codes import (
     EscalationLevel,
     InputClassification,
     ProjectType,
     RaciCode,
+    ReportSource,
 )
 
 SCENARIO_MAX_CHARS = 4000
@@ -134,3 +135,27 @@ class Report(DomainModel):
     stakeholder_updates: StakeholderUpdates
     decision_memo: DecisionMemo
     raci: list[RaciRow]
+
+
+# Not sent to an LLM, so this docstring is for developers.
+class Sample(DomainModel):
+    """A stored demo run: the scenario, the AI's diagnosis and draft, and the final version.
+
+    `changes` is the "What I changed" note, in Markdown.
+    """
+
+    id: Text
+    title: Text
+    badge: ReportSource
+    scenario: Scenario
+    diagnosis: Diagnosis
+    draft: Report
+    final: Report
+    changes: Text
+
+    @field_validator("badge")
+    @classmethod
+    def _badge_is_not_live(cls, badge: ReportSource) -> ReportSource:
+        if badge is ReportSource.LIVE:
+            raise ValueError("a sample is a stored run, so its badge can't be live")
+        return badge

@@ -75,7 +75,7 @@ A free, public web app that shows how a troubled project can be assessed and rec
 
 Each sample is a real recorded AI run, generated once by the author with a local script, then reviewed and corrected. It stores the scenario and its key points, the diagnosis, the raw AI draft, the author's final version and a "What I changed" note.
 
-**Badges:** every report shows either "Recorded AI run, reviewed by the author" or "Live AI".
+**Badges:** every report shows either "Recorded AI run, reviewed by the author" or "Live AI". During development only, a hand-made placeholder sample shows "Placeholder, not a real run". Claude writes it, it never ships in a release, and it is removed in M5.
 
 **Output** (tabs or sections)
 - **Health dashboard:** 5 dimensions and an overall rating. Higher scores are always healthier. Scores run 0–100 under the hood. The display shows Good (Green, 70+), Problematic (Amber, 40–69) or At Risk (Red, under 40), with a one-line rationale.
