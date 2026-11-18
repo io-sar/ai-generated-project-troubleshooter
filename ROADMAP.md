@@ -2,7 +2,7 @@
 
 A public web app that assesses a troubled project and produces a recovery pack: health ratings, risks, a recovery plan, stakeholder updates, a decision memo and a RACI matrix. It is built with AI coding tools, and the delivery judgment behind it is the author's. The full requirements are in [SPEC.md](SPEC.md).
 
-**Current status:** M2 done: a placeholder sample renders in full with no key or network calls, downloads as Markdown or HTML, and reads well on a phone. Next up: M3.
+**Current status:** M3 done: visitors can edit the risk register, the RACI matrix and the health labels on a sample's final version, and their edits reach both downloads with human-adjusted markers. The AI draft stays read-only. Next up: M4.
 
 **Live tracking:** work, risks and decisions are on the [project board](https://github.com/users/io-sar/projects/5).
 
