@@ -4,12 +4,19 @@ Report text may come from a model, so it is shown with `plain()` or in a datafra
 never as Markdown or HTML.
 """
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Literal
 
 import streamlit as st
 
-from troubleshooter.domain.codes import Dimension, EscalationLevel, HealthLabel, ReportSource
+from troubleshooter.domain.codes import (
+    Dimension,
+    EscalationLevel,
+    HealthLabel,
+    RaciCode,
+    ReportSource,
+)
 from troubleshooter.domain.models import (
     DecisionMemo,
     Diagnosis,
@@ -39,7 +46,7 @@ from troubleshooter.export.renderer import (
 )
 from troubleshooter.i18n import t
 from troubleshooter.ui import state
-from troubleshooter.ui.state import EditRejected
+from troubleshooter.ui.state import EditRejected, RaciEdit
 
 BadgeColor = Literal["green", "blue", "orange", "red"]
 
@@ -105,7 +112,10 @@ def render_report(report: Report, *, editable: bool = False) -> None:
     render_recovery_plan(report)
     render_stakeholder_updates(report.stakeholder_updates)
     render_decision_memo(report.decision_memo)
-    render_raci(report.raci)
+    if editable:
+        render_raci_editor(report.raci)
+    else:
+        render_raci(report.raci)
 
 
 def render_stakeholder_updates(updates: StakeholderUpdates) -> None:
@@ -150,9 +160,93 @@ def render_raci(raci: list[RaciRow]) -> None:
         for position, row in enumerate(raci)
     ]
     st.dataframe(rows, hide_index=True)
+    _render_raci_warning(raci, broken)
+
+
+def render_raci_editor(raci: list[RaciRow]) -> None:
+    """Show the RACI matrix as an editable grid of activities by roles.
+
+    The roles are the report's own, so a visitor reassigns codes but can't add a role.
+    Rows without exactly one Accountable are flagged, and can still be applied and exported.
+    """
+    st.subheader(t("raci.title"), anchor=False)
+    st.caption(t("edit.help"))
+    roles = roles_in_order(raci)
+    broken = set(rows_without_one_accountable(raci))
+    with st.form("raci_form", border=False):
+        edited = st.data_editor(
+            [_raci_grid_row(row, roles, position in broken) for position, row in enumerate(raci)],
+            column_config=_raci_columns(roles),
+            disabled=["check", "edited"],
+            num_rows="dynamic",
+            hide_index=True,
+            key=state.editor_key("raci"),
+        )
+        applied = st.form_submit_button(t("edit.apply"), key="raci_apply")
+    _render_raci_warning(raci, broken)
+    if applied:
+        _apply_edits(
+            lambda: state.save_raci_edits(raci_edits_from_grid(edited, roles)),
+            lambda field: t("raci.activity") if field == "activity" else field,
+        )
+
+
+def role_column(position: int) -> str:
+    """The grid key for the role at this position. Role names only label columns."""
+    return f"role_{position}"
+
+
+def raci_edits_from_grid(rows: list[dict[str, Any]], roles: list[str]) -> list[RaciEdit]:
+    """Turn the RACI grid's rows back into one edit per activity, for the state layer."""
+    return [
+        RaciEdit(
+            row.get("activity"),
+            {role: row.get(role_column(position)) for position, role in enumerate(roles)},
+        )
+        for row in rows
+    ]
+
+
+def _raci_grid_row(row: RaciRow, roles: list[str], broken: bool) -> dict[str, Any]:
+    cells = codes_by_role(row, roles)
+    return (
+        {"activity": row.activity}
+        # An empty cell is None, so the dropdown shows it blank rather than as a choice.
+        | {role_column(position): cells[role] or None for position, role in enumerate(roles)}
+        | {
+            "check": t("raci.needs_one_a") if broken else "",
+            "edited": t("edit.marker") if row.human_adjusted else "",
+        }
+    )
+
+
+def _raci_columns(roles: list[str]) -> dict[str, Any]:
+    codes = [code.value for code in RaciCode]
+    return {
+        "activity": t("raci.activity"),
+        "check": t("raci.check"),
+        "edited": t("edit.column"),
+    } | {
+        role_column(position): st.column_config.SelectboxColumn(role, options=codes)
+        for position, role in enumerate(roles)
+    }
+
+
+def _render_raci_warning(raci: list[RaciRow], broken: set[int]) -> None:
     if broken:
         names = ", ".join(raci[position].activity for position in sorted(broken))
         st.warning(t("raci.warning", activities=plain(names)))
+
+
+def _apply_edits(save: Callable[[], None], column_label: Callable[[str], str]) -> None:
+    """Save an editor's changes and redraw, or say which cell to fix and keep the changes."""
+    try:
+        save()
+    except EditRejected as rejected:
+        column = column_label(rejected.field)
+        st.error(t("edit.rejected", row=rejected.row, column=column))
+        return
+    st.rerun()
 
 
 def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
@@ -251,16 +345,12 @@ def render_risk_editor(risks: list[Risk]) -> None:
             hide_index=True,
             key=state.editor_key("risks"),
         )
-        applied = st.form_submit_button(t("edit.apply"))
-    if not applied:
-        return
-    try:
-        state.save_risk_edits(edited)
-    except EditRejected as rejected:
-        column = t(_RISK_LABELS[rejected.field])
-        st.error(t("edit.rejected", row=rejected.row, column=column))
-        return
-    st.rerun()
+        applied = st.form_submit_button(t("edit.apply"), key="risks_apply")
+    if applied:
+        _apply_edits(
+            lambda: state.save_risk_edits(edited),
+            lambda field: t(_RISK_LABELS[field]),
+        )
 
 
 def _risk_row(risk: Risk) -> dict[str, object]:

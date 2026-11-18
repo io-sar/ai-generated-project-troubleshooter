@@ -105,28 +105,34 @@ def test_risk_register_lists_final_risks_with_their_scores_and_levels() -> None:
     assert list(risks["edited"]) == ["", "", "", ""]
 
 
-def edit_risks(app: AppTest, delta: dict[str, Any]) -> AppTest:
-    """Make edits in the risk editor, as a visitor would, then click Apply."""
-    editor = app.data_editor[0]
+EDITORS = ("risks", "raci")
+
+
+def edit_table(app: AppTest, table: str, delta: dict[str, Any]) -> AppTest:
+    """Make edits in one editor, as a visitor would, then click its Apply button."""
+    editor = app.data_editor[EDITORS.index(table)]
     assert editor.key is not None
     app.session_state[editor.key] = {
         "edited_rows": {},
         "added_rows": [],
         "deleted_rows": [],
     } | delta
-    apply_button(app).click().run()
+    app.button(key=f"{table}_apply").click().run()
     return app
 
 
-def apply_button(app: AppTest) -> Any:
-    return next(button for button in app.button if button.label == t("edit.apply"))
+def edit_risks(app: AppTest, delta: dict[str, Any]) -> AppTest:
+    return edit_table(app, "risks", delta)
 
 
-def test_final_view_has_one_editable_risk_table() -> None:
+def test_final_view_has_editable_risk_and_raci_tables() -> None:
     app = run_app(sample="placeholder")
 
-    assert len(app.data_editor) == 1
-    assert app.data_editor[0].editing_mode == "dynamic"
+    assert [editor.editing_mode for editor in app.data_editor] == ["dynamic", "dynamic"]
+    assert [app.button(key=f"{table}_apply").label for table in EDITORS] == [
+        t("edit.apply"),
+        t("edit.apply"),
+    ]
 
 
 def test_applied_risk_edit_updates_the_score_and_shows_the_marker() -> None:
@@ -268,18 +274,90 @@ def test_decision_memo_shows_options_and_recommendation() -> None:
     assert r"Extend the licence by two months and cut over in June\." in markdown_text(app)
 
 
+# Placeholder roles, in the order they first appear: IT manager, Database administrator,
+# Project manager, Data lead, Data analyst, Support manager, Sponsor.
+DATA_ANALYST = "role_4"
+PROJECT_MANAGER = "role_2"
+
+
 def test_raci_grid_shows_codes_by_role_with_no_warning() -> None:
     app = run_app(sample="placeholder")
     raci = app.dataframe[5].value
 
-    assert list(raci[t("raci.activity")]) == [
+    assert list(raci["activity"]) == [
         "Schema handover",
         "Data cleaning",
         "Cutover decision",
     ]
-    assert list(raci["Data analyst"]) == ["", "R", ""]
-    assert list(raci[t("raci.check")]) == ["", "", ""]
+    assert codes(raci[DATA_ANALYST]) == [None, "R", None]
+    assert list(raci["check"]) == ["", "", ""]
     assert not app.warning
+
+
+def codes(column: Any) -> list[str | None]:
+    # AppTest reads empty cells back as NaN; the app itself receives None.
+    return [value if isinstance(value, str) else None for value in column]
+
+
+def edit_raci(app: AppTest, delta: dict[str, Any]) -> AppTest:
+    return edit_table(app, "raci", delta)
+
+
+def test_changed_raci_code_marks_the_row() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_raci(app, {"edited_rows": {0: {PROJECT_MANAGER: "C"}}})
+
+    raci = app.dataframe[5].value
+    assert not app.exception and not app.error
+    assert codes(raci[PROJECT_MANAGER]) == ["C", None, "R"]
+    assert list(raci["edited"]) == [t("edit.marker"), "", ""]
+
+
+def test_second_accountable_warns_but_still_exports() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_raci(app, {"edited_rows": {1: {DATA_ANALYST: "A"}}})
+
+    raci = app.dataframe[5].value
+    assert not app.error
+    assert list(raci["check"]) == ["", t("raci.needs_one_a"), ""]
+    assert app.warning[0].value == t("raci.warning", activities="Data cleaning")
+    assert len(app.download_button) == 2
+
+
+def test_fixing_a_broken_raci_row_clears_the_warning(sample_copy: Path) -> None:
+    final_path = sample_copy / "final.json"
+    final = json.loads(final_path.read_text(encoding="utf-8"))
+    final["raci"][1]["assignments"][1]["code"] = "A"
+    final_path.write_text(json.dumps(final), encoding="utf-8")
+    app = run_app(sample="placeholder")
+
+    edit_raci(app, {"edited_rows": {1: {DATA_ANALYST: "R"}}})
+
+    assert not app.warning
+    assert list(app.dataframe[5].value["edited"]) == ["", t("edit.marker"), ""]
+
+
+def test_added_and_deleted_raci_rows() -> None:
+    app = run_app(sample="placeholder")
+    new = {"activity": "Go-live comms", PROJECT_MANAGER: "A"}
+
+    edit_raci(app, {"added_rows": [new], "deleted_rows": [0]})
+
+    raci = app.dataframe[5].value
+    assert list(raci["activity"]) == ["Data cleaning", "Cutover decision", "Go-live comms"]
+    assert list(raci["edited"]) == ["", "", t("edit.marker")]
+
+
+def test_raci_row_without_an_activity_is_rejected() -> None:
+    app = run_app(sample="placeholder")
+
+    edit_raci(app, {"added_rows": [{PROJECT_MANAGER: "A"}]})
+
+    assert not app.exception
+    assert app.error[0].value == t("edit.rejected", row=4, column=t("raci.activity"))
+    assert len(app.dataframe[5].value) == 3
 
 
 def test_raci_row_with_two_accountables_is_flagged(sample_copy: Path) -> None:
@@ -292,7 +370,7 @@ def test_raci_row_with_two_accountables_is_flagged(sample_copy: Path) -> None:
     raci = app.dataframe[5].value
 
     assert not app.exception
-    assert list(raci[t("raci.check")]) == ["", t("raci.needs_one_a"), ""]
+    assert list(raci["check"]) == ["", t("raci.needs_one_a"), ""]
     assert app.warning[0].value == t("raci.warning", activities="Data cleaning")
 
 
