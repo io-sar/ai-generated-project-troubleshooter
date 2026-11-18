@@ -86,6 +86,7 @@ Exception: Claude writes the whole M2 placeholder sample, including its draft, f
 ## Definition of done
 - A change is done when it is tested, all checks pass, and the results are reported before asking to commit.
 - A milestone is done only when every item on its "Done when" list is met and tested. Then update the status line in the roadmap.
+- When a milestone ends, give the author a brief report: what was achieved, each library installed (why, and the alternatives considered), and each architectural decision (why, and the alternatives considered). Say so plainly when there were none.
 
 ## Writing
 Repo docs are public. Write them for outside readers, in plain language.
