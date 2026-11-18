@@ -34,6 +34,8 @@ Never write these, because they must be the author's own judgment:
 
 Scenario text can be drafted by AI. The author reviews all Greek UI text.
 
+Exception: Claude writes the whole M2 placeholder sample, including its draft, final version and "What I changed" note. It carries the placeholder badge, is exempt from the `draft.json` rule, and is removed in M5, before release 0.1.
+
 ## Rules that must not break
 - **Secrets:** no key in code or the repo. Visitor keys live only in `st.session_state` and never reach logs, disk, exceptions or exports.
 - **API clients:** never cache them with `st.cache_resource` or `st.cache_data`.
