@@ -42,6 +42,15 @@ class RaciCode(StrEnum):
     INFORMED = "I"
 
 
+class ReportSource(StrEnum):
+    """Where a report came from. Shown to visitors as the report's badge."""
+
+    RECORDED = "recorded"
+    LIVE = "live"
+    # Development only: a hand-made sample, removed in M5 before release 0.1.
+    PLACEHOLDER = "placeholder"
+
+
 class InputClassification(StrEnum):
     """What stage 1 decided the visitor's text is. Only TROUBLED goes on to stage 2."""
 

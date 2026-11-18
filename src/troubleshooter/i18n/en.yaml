@@ -39,6 +39,11 @@ raci:
   C: Consulted
   I: Informed
 
+badge:
+  recorded: Recorded AI run, reviewed by the author
+  live: Live AI
+  placeholder: Placeholder, not a real run
+
 input_classification:
   troubled: Troubled project
   healthy: Healthy project

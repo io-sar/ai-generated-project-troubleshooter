@@ -12,6 +12,7 @@ CODE_SECTIONS: dict[str, type[StrEnum]] = {
     "escalation": codes.EscalationLevel,
     "raci": codes.RaciCode,
     "input_classification": codes.InputClassification,
+    "badge": codes.ReportSource,
 }
 
 
