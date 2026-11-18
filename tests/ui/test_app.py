@@ -31,6 +31,11 @@ def markdown_text(app: AppTest) -> list[str]:
     return [element.value for element in app.markdown]
 
 
+def warnings_besides_refresh(app: AppTest) -> list[str]:
+    """Warnings other than the refresh notice, which the final view always shows."""
+    return [w.value for w in app.warning if w.value != t("edit.refresh_warning")]
+
+
 def shows_report(app: AppTest) -> bool:
     return PLACEHOLDER_BADGE in markdown_text(app)
 
@@ -284,7 +289,7 @@ def test_shared_link_opens_the_report_without_a_click() -> None:
 
     assert not app.exception
     assert shows_report(app)
-    assert not app.warning
+    assert not warnings_besides_refresh(app)
 
 
 @pytest.mark.parametrize("sample", ["nope", "../placeholder", ""])
@@ -360,7 +365,7 @@ def test_raci_grid_shows_codes_by_role_with_no_warning() -> None:
     ]
     assert codes(raci[DATA_ANALYST]) == [None, "R", None]
     assert list(raci["check"]) == ["", "", ""]
-    assert not app.warning
+    assert not warnings_besides_refresh(app)
 
 
 def codes(column: Any) -> list[str | None]:
@@ -391,7 +396,7 @@ def test_second_accountable_warns_but_still_exports() -> None:
     raci = app.dataframe[5].value
     assert not app.error
     assert list(raci["check"]) == ["", t("raci.needs_one_a"), ""]
-    assert app.warning[0].value == t("raci.warning", activities="Data cleaning")
+    assert warnings_besides_refresh(app) == [t("raci.warning", activities="Data cleaning")]
     assert len(app.download_button) == 2
 
 
@@ -404,7 +409,7 @@ def test_fixing_a_broken_raci_row_clears_the_warning(sample_copy: Path) -> None:
 
     edit_raci(app, {"edited_rows": {1: {DATA_ANALYST: "R"}}})
 
-    assert not app.warning
+    assert not warnings_besides_refresh(app)
     assert list(app.dataframe[5].value["edited"]) == ["", t("edit.marker"), ""]
 
 
@@ -440,7 +445,7 @@ def test_raci_row_with_two_accountables_is_flagged(sample_copy: Path) -> None:
 
     assert not app.exception
     assert list(raci["check"]) == ["", t("raci.needs_one_a"), ""]
-    assert app.warning[0].value == t("raci.warning", activities="Data cleaning")
+    assert warnings_besides_refresh(app) == [t("raci.warning", activities="Data cleaning")]
 
 
 def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
@@ -493,6 +498,35 @@ def test_draft_has_no_input_widgets() -> None:
     assert not app.text_input
     assert not app.text_area
     assert not app.number_input
+    assert not app.data_editor
+    assert t("edit.adjust") not in [expander.label for expander in app.expander]
+
+
+def test_final_view_warns_that_refreshing_loses_edits() -> None:
+    final = run_app(sample="placeholder")
+    compare = compare_view()
+
+    assert [w.value for w in final.warning] == [t("edit.refresh_warning")]
+    assert t("edit.refresh_warning") not in [w.value for w in compare.warning]
+
+
+def test_refresh_warning_comes_before_the_editors() -> None:
+    app = run_app(sample="placeholder")
+    values = [getattr(element, "value", None) for element in app.main]
+
+    assert values.index(t("edit.refresh_warning")) < values.index(t("health.title"))
+
+
+def test_analyzing_again_restores_the_original_final_version() -> None:
+    app = run_app(sample="placeholder")
+    edit_risks(app, {"deleted_rows": [0]})
+    assert len(app.dataframe[0].value) == 3
+
+    app.button[0].click().run()
+
+    risks = app.dataframe[0].value
+    assert list(risks["id"]) == ["R1", "R2", "R3", "R4"]
+    assert list(risks["edited"]) == ["", "", "", ""]
 
 
 def test_switching_back_shows_the_final_report_again() -> None:

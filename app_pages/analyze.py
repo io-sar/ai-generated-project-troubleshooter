@@ -84,6 +84,8 @@ if shown is not None and report is not None:
     if view == "compare":
         render_comparison(shown, report)
     else:
+        # Edits are kept only in this session, never on disk, so say so before any editor.
+        st.warning(t("edit.refresh_warning"))
         render_report(report, editable=True)
     render_downloads(shown, generated_at=datetime.now(UTC))
     render_under_the_hood(report, shown.diagnosis)

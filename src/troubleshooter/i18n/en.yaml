@@ -103,6 +103,9 @@ edit:
   column: Edited
   marker: Human-adjusted
   rejected: "Row {row}: check the {column} value. Nothing was changed yet."
+  refresh_warning: >-
+    Your edits live only in this browser tab. Refreshing or closing the page loses them,
+    so download the report first.
   adjust: Adjust
   label_for: "{dimension} label"
   note_for: "{dimension} note (optional)"
