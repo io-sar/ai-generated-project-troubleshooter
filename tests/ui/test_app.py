@@ -10,10 +10,13 @@ from troubleshooter.i18n import t
 
 APP = Path(__file__).parents[2] / "streamlit_app.py"
 PLACEHOLDER_BADGE = f":orange-badge[{t('badge.placeholder')}]"
+# The first run that draws a table imports pandas and pyarrow, which can pass
+# AppTest's 3-second default on a cold or slow CI machine. Later runs take under 1 s.
+RUN_TIMEOUT_SECONDS = 15
 
 
 def run_app(sample: str | None = None) -> AppTest:
-    app = AppTest.from_file(str(APP))
+    app = AppTest.from_file(str(APP), default_timeout=RUN_TIMEOUT_SECONDS)
     if sample is not None:
         app.query_params["sample"] = sample
     app.run()
@@ -54,8 +57,54 @@ def test_analyze_shows_the_report_and_a_shareable_link() -> None:
     assert not app.exception
     assert shows_report(app)
     assert app.header[0].value == "Placeholder: CRM migration running late"
-    assert "- Data quality blocks the migration." in markdown_text(app)[-1]
+    assert any(r"- Data quality blocks the migration\." in line for line in markdown_text(app))
     assert app.query_params["sample"] == "placeholder"
+
+
+def badge(label: str) -> str:
+    colors = {"good": "green", "problematic": "orange", "at_risk": "red"}
+    return f":{colors[label]}-badge[{t(f'health_label.{label}')}]"
+
+
+def test_health_dashboard_shows_labels_not_numbers() -> None:
+    text = markdown_text(run_app(sample="placeholder"))
+
+    # Final placeholder scores: schedule 30, scope 65, quality 40, risk control 50,
+    # stakeholder confidence 35, so the overall average of 44 is Problematic.
+    assert f"{t('health.overall')} {badge('problematic')}" in text
+    expected = {
+        "schedule": "at_risk",
+        "scope": "problematic",
+        "quality": "problematic",
+        "risk_control": "problematic",
+        "stakeholder_confidence": "at_risk",
+    }
+    for dimension, label in expected.items():
+        assert f"**{t(f'dimension.{dimension}')}** {badge(label)}" in text
+    for score in ("30", "65", "40", "50", "35", "44"):
+        assert not any(score in line for line in text)
+
+
+def test_risk_register_lists_final_risks_with_translated_escalation() -> None:
+    app = run_app(sample="placeholder")
+    risks = app.dataframe[0].value
+
+    assert list(risks[t("risks.id")]) == ["R1", "R2", "R3", "R4"]
+    assert list(risks[t("risks.score")]) == [20, 16, 9, 16]
+    assert list(risks[t("risks.escalation")]) == [
+        t("escalation.steering"),
+        t("escalation.sponsor"),
+        t("escalation.pm"),
+        t("escalation.sponsor"),
+    ]
+
+
+def test_recovery_plan_shows_three_sprints_in_order() -> None:
+    text = markdown_text(run_app(sample="placeholder"))
+    headings = [f"**{t(f'plan.{name}')}**" for name in ("stabilize", "recover", "sustain")]
+
+    positions = [text.index(heading) for heading in headings]
+    assert positions == sorted(positions)
 
 
 def test_shared_link_opens_the_report_without_a_click() -> None:

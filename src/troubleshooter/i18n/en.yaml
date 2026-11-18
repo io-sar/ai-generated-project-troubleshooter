@@ -17,6 +17,32 @@ report:
   scenario: Scenario
   key_points: Key points
 
+health:
+  title: Health dashboard
+  overall: Overall
+
+risks:
+  title: Risk register
+  id: ID
+  description: Risk
+  likelihood: Likelihood
+  impact: Impact
+  score: Score
+  owner: Owner
+  mitigation: Mitigation
+  escalation: Escalation
+  signals: Signals
+
+plan:
+  title: Recovery plan
+  sequencing: The three sprints are sequenced for the best fix and use of resources.
+  stabilize: "Sprint 1, weeks 1–2: Stabilize"
+  recover: "Sprint 2, weeks 3–4: Recover"
+  sustain: "Sprint 3, weeks 5–6: Sustain"
+  action: Action
+  owner: Owner
+  success_signal: Success signal
+
 errors:
   sample_not_found: That sample doesn't exist. Pick one from the list below.
   no_samples: The samples can't be loaded right now. Please try again later.
