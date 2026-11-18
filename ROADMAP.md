@@ -132,6 +132,7 @@ Sizes are relative: S is small, M is medium, L is large.
 - README with overview, diagram, data flow and links.
 - Screenshot or short GIF for the README and CV.
 - Timing check of the sample path on the awake deployed app.
+- Point the app's repo links at `main` by changing `DOCS_BRANCH` in `config.py`.
 
 ## M6 — Live AI mode
 **Goal:** visitors can analyze their own project with their own key.

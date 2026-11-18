@@ -262,6 +262,72 @@ def test_switching_back_shows_the_final_report_again() -> None:
     assert len(app.dataframe[0].value) == 4
 
 
+def sidebar_text(app: AppTest) -> list[str]:
+    return [element.value for element in app.sidebar.markdown]
+
+
+def test_sidebar_shows_the_builder_and_their_links() -> None:
+    app = run_app()
+
+    assert app.sidebar.subheader[0].value == t("about.title")
+    assert f"**{t('about.name')}**" in sidebar_text(app)
+    assert app.sidebar.caption[0].value == t("about.role")
+    assert f"[{t('about.linkedin')}]({config.BUILDER_LINKEDIN_URL})" in sidebar_text(app)
+    assert f"[{t('about.repo')}]({config.REPO_URL})" in sidebar_text(app)
+    assert [link.label for link in app.sidebar.page_link] == [t("how.link")]
+
+
+def test_results_screen_links_to_how_this_was_built() -> None:
+    before = run_app()
+    after = run_app(sample="placeholder")
+
+    main_links = [link.label for link in after.main.page_link]
+    assert main_links == [t("how.link")]
+    assert not before.main.page_link
+
+
+def how_built_page() -> AppTest:
+    app = run_app()
+    app.switch_page(config.HOW_BUILT_PAGE).run()
+    return app
+
+
+def test_how_this_was_built_page_renders() -> None:
+    app = how_built_page()
+
+    assert not app.exception
+    assert app.title[0].value == t("how.title")
+    raci = app.dataframe[0].value
+    assert len(raci) == 6
+    assert raci[t("how.raci.activity")].iloc[0] == t("how.raci.scope")
+    assert list(raci[t("how.raci.claude")]) == ["C", "R", "R", "", "", "C"]
+
+
+@pytest.mark.parametrize(
+    ("label_key", "path"),
+    [
+        ("how.links.spec", "SPEC.md"),
+        ("how.links.roadmap", "ROADMAP.md"),
+        ("how.links.adrs", "docs/adr"),
+        ("how.links.tests", "tests"),
+        ("how.links.ci", ".github/workflows/ci.yml"),
+    ],
+)
+def test_how_this_was_built_links_into_the_repo(label_key: str, path: str) -> None:
+    url = f"{config.REPO_URL}/tree/{config.DOCS_BRANCH}/{path}"
+
+    assert f"[{t(label_key)}]({url})" in [
+        element.value for element in how_built_page().main.markdown
+    ]
+
+
+def test_how_this_was_built_links_the_board_and_repo() -> None:
+    text = [element.value for element in how_built_page().main.markdown]
+
+    assert f"[{t('how.links.board')}]({config.BOARD_URL})" in text
+    assert f"[{t('how.links.repo')}]({config.REPO_URL})" in text
+
+
 def test_report_offers_markdown_and_html_downloads() -> None:
     app = run_app(sample="placeholder")
 

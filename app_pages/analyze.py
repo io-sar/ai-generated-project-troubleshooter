@@ -69,6 +69,7 @@ shown = state.shown_sample()
 if shown is not None:
     st.divider()
     render_report_header(shown)
+    st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))
     view = st.segmented_control(
         t("view.label"),
         ["final", "compare"],

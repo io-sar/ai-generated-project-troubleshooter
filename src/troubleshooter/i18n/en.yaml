@@ -8,6 +8,50 @@ app:
 
 nav:
   analyze: Analyze
+  how_built: How this was built
+
+about:
+  title: About the builder
+  name: I. Sarantidis
+  role: Technical Project Manager | Engineering Manager | Technical Product Owner
+  linkedin: LinkedIn profile
+  repo: Source code on GitHub
+
+how:
+  link: How this was built with Claude Code
+  title: How this was built
+  intro: >-
+    This app was built with Claude Code, an AI coding tool. The delivery judgment is
+    the author's: scope, priorities, decisions and the corrections to each sample
+    report. Claude wrote most of the code and tests, and the author reviewed them.
+  split_title: Who did what
+  managed_title: How the project is managed
+  managed_intro: >-
+    The project is run with the same methods the app teaches, and the records are
+    public: the plan, the board of tasks, risks and decisions, and the decision records.
+  checks_title: How the code is checked
+  checks_intro: >-
+    Every change runs linting, strict type checks, import rules and the test suite in
+    CI. The tests never call a real AI provider, so they need no API key.
+  raci:
+    activity: Activity
+    author: Author
+    claude: Claude
+    legend: R is responsible, A is accountable, C is consulted.
+    scope: Scope, priorities and decisions
+    code: Code and tests
+    scenarios: Sample scenario text
+    corrections: Corrections to sample reports and "What I changed" notes
+    greek: Review of Greek UI text
+    reviews: Status updates and retrospectives
+  links:
+    spec: Spec (requirements)
+    roadmap: Roadmap (milestones and status)
+    board: Project board (tasks, risks and decisions)
+    adrs: Architecture decision records
+    tests: Tests
+    ci: CI checks
+    repo: Full source code on GitHub
 
 analyze:
   sample_label: Sample scenario
