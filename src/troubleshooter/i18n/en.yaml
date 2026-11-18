@@ -17,6 +17,16 @@ report:
   scenario: Scenario
   key_points: Key points
 
+view:
+  label: Report view
+  final: Final report
+  compare: Compare AI draft and final
+
+compare:
+  changes: What I changed
+  draft: AI draft
+  final: Final version
+
 health:
   title: Health dashboard
   overall: Overall

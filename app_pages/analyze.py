@@ -14,6 +14,7 @@ from troubleshooter.engines.sample_engine import SampleFormatError, list_sample_
 from troubleshooter.i18n import t
 from troubleshooter.ui import state
 from troubleshooter.ui.report_view import (
+    render_comparison,
     render_report,
     render_report_header,
     render_under_the_hood,
@@ -66,6 +67,17 @@ shown = state.shown_sample()
 if shown is not None:
     st.divider()
     render_report_header(shown)
-    # The author's reviewed version is the main report; the AI draft is shown for comparison.
-    render_report(shown.final)
+    view = st.segmented_control(
+        t("view.label"),
+        ["final", "compare"],
+        default="final",
+        required=True,
+        format_func=lambda option: t(f"view.{option}"),
+        key="report_view",
+    )
+    # The reviewed final version is the main report; the AI draft is there to compare.
+    if view == "compare":
+        render_comparison(shown)
+    else:
+        render_report(shown.final)
     render_under_the_hood(shown.final, shown.diagnosis)

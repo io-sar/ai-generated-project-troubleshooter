@@ -77,6 +77,25 @@ def render_report_header(sample: Sample) -> None:
         st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
 
 
+def render_comparison(sample: Sample) -> None:
+    """Show the "What I changed" note, then the AI draft and the final version side by side.
+
+    Streamlit stacks the two columns on narrow screens, so phones read them one after
+    the other.
+    """
+    st.subheader(t("compare.changes"), anchor=False)
+    # The note is the author's own text from the repo, so Markdown is allowed; HTML never is.
+    st.markdown(sample.changes)
+    draft_column, final_column = st.columns(2)
+    with draft_column:
+        st.header(t("compare.draft"), anchor=False)
+        # Read-only by design: the draft records what the AI produced.
+        render_report(sample.draft)
+    with final_column:
+        st.header(t("compare.final"), anchor=False)
+        render_report(sample.final)
+
+
 def render_report(report: Report) -> None:
     """Show every report section, in reading order."""
     render_health(report.health)

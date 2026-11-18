@@ -210,3 +210,53 @@ def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
     assert list(scores[t("hood.score")]) == [30, 65, 40, 50, 35, 44]
     assert list(signals[t("hood.signal_id")]) == ["S1", "S2", "S3", "S4", "S5"]
     assert app.json[0].value
+
+
+def compare_view() -> AppTest:
+    app = run_app(sample="placeholder")
+    app.segmented_control[0].set_value("compare").run()
+    return app
+
+
+def test_default_view_shows_only_the_final_report() -> None:
+    app = run_app(sample="placeholder")
+
+    assert app.segmented_control[0].label == t("view.label")
+    assert app.segmented_control[0].value == "final"
+    assert t("compare.changes") not in [element.value for element in app.subheader]
+    assert len(app.dataframe[0].value) == 4
+
+
+def test_compare_view_shows_the_note_then_draft_beside_final() -> None:
+    app = compare_view()
+    risk_tables = [app.dataframe[0].value, app.dataframe[6].value]
+
+    assert not app.exception
+    assert app.subheader[2].value == t("compare.changes")
+    assert any("**Added risk R4**" in line for line in markdown_text(app))
+    assert [element.value for element in app.header][1:] == [
+        t("compare.draft"),
+        t("compare.final"),
+    ]
+    assert [len(table) for table in risk_tables] == [3, 4]
+
+
+def test_draft_has_no_input_widgets() -> None:
+    app = compare_view()
+
+    # The only inputs on the page are the sample picker, Analyze and the view switch.
+    assert len(app.selectbox) == 1
+    assert len(app.button) == 1
+    assert len(app.segmented_control) == 1
+    assert not app.text_input
+    assert not app.text_area
+    assert not app.number_input
+
+
+def test_switching_back_shows_the_final_report_again() -> None:
+    app = compare_view()
+
+    app.segmented_control[0].set_value("final").run()
+
+    assert t("compare.draft") not in [element.value for element in app.header]
+    assert len(app.dataframe[0].value) == 4
