@@ -151,6 +151,11 @@ hood:
   title: Under the hood
   engine: Engine
   sample_engine: Stored sample
+  model: Model
+  prompts: Prompt versions
+  prompt_version: "{prompt} {version}"
+  recorded: Recorded on
+  date_format: "%Y-%m-%d"
   scores: Health scores (0–100, higher is healthier)
   dimension: Dimension
   score: Score

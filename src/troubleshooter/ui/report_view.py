@@ -25,6 +25,7 @@ from troubleshooter.domain.models import (
     RaciRow,
     Report,
     Risk,
+    RunInfo,
     Sample,
     Sprint,
     StakeholderUpdates,
@@ -250,10 +251,16 @@ def _apply_edits(save: Callable[[], None], column_label: Callable[[str], str]) -
     st.rerun()
 
 
-def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
-    """Show the numbers and data behind the report, for readers who want the detail."""
+def render_under_the_hood(report: Report, diagnosis: Diagnosis, run: RunInfo | None = None) -> None:
+    """Show the numbers and data behind the report, for readers who want the detail.
+
+    `run` says how a recorded sample was made, so a reader can trace it to the model and
+    prompts. Samples that weren't recorded from a model, such as the placeholder, have none.
+    """
     with st.expander(t("hood.title")):
         st.markdown(f"**{t('hood.engine')}:** {t('hood.sample_engine')}")
+        if run is not None:
+            render_run(run)
         scores = dimension_scores(report.health)
         rows = [
             {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
@@ -279,6 +286,17 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
         st.dataframe(signals, hide_index=True)
         st.markdown(f"**{t('hood.diagnosis')}**")
         st.json(diagnosis.model_dump(mode="json"), expanded=False)
+
+
+def render_run(run: RunInfo) -> None:
+    """Show the model, each prompt version and the date a sample was recorded."""
+    versions = ", ".join(
+        t("hood.prompt_version", prompt=plain(prompt_id), version=plain(version))
+        for prompt_id, version in sorted(run.prompt_versions.items())
+    )
+    st.markdown(f"**{t('hood.model')}:** {plain(run.model)}")
+    st.markdown(f"**{t('hood.prompts')}:** {versions}")
+    st.markdown(f"**{t('hood.recorded')}:** {run.recorded_on.strftime(t('hood.date_format'))}")
 
 
 def render_health(health: HealthScores, *, editable: bool = False) -> None:

@@ -87,6 +87,6 @@ if shown is not None and report is not None:
         st.warning(t("edit.refresh_warning"))
         render_report(report, editable=True)
     render_downloads(shown, report, generated_at=datetime.now(UTC))
-    render_under_the_hood(report, shown.diagnosis)
+    render_under_the_hood(report, shown.diagnosis, shown.run)
     # After the report, so a reader sees the result first and the build story last.
     st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))

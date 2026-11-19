@@ -461,6 +461,43 @@ def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
     assert app.json[0].value
 
 
+def hood_text(app: AppTest) -> list[str]:
+    """The Markdown lines in Under the hood, which is the last expander."""
+    return [element.value for element in app.expander[-1].markdown]
+
+
+def test_under_the_hood_shows_how_a_recorded_sample_was_made(sample_copy: Path) -> None:
+    run = {
+        "provider": "anthropic",
+        "model": "claude-sonnet-5-5",
+        "prompt_versions": {"generate": "v2", "diagnose": "v1"},
+        "prompt_fingerprints": {"generate": "a" * 64, "diagnose": "b" * 64},
+        "recorded_on": "2026-11-20",
+    }
+    (sample_copy / "run.json").write_text(json.dumps(run), encoding="utf-8")
+
+    app = run_app(sample="placeholder")
+
+    assert hood_text(app)[1:4] == [
+        f"**{t('hood.model')}:** claude\\-sonnet\\-5\\-5",
+        f"**{t('hood.prompts')}:** "
+        + ", ".join(
+            [
+                t("hood.prompt_version", prompt="diagnose", version="v1"),
+                t("hood.prompt_version", prompt="generate", version="v2"),
+            ]
+        ),
+        f"**{t('hood.recorded')}:** 2026-11-20",
+    ]
+
+
+def test_under_the_hood_shows_no_run_for_a_sample_not_recorded() -> None:
+    app = run_app(sample="placeholder")
+
+    labels = [t("hood.model"), t("hood.prompts"), t("hood.recorded")]
+    assert not [line for line in hood_text(app) if any(f"**{label}:**" in line for label in labels)]
+
+
 def compare_view() -> AppTest:
     app = run_app(sample="placeholder")
     app.segmented_control[0].set_value("compare").run()
