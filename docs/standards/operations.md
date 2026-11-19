@@ -6,4 +6,4 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Logging
 - **Rule:** Log with the standard `logging` module to stdout, where Streamlit Community Cloud collects it. No `print()` in app code and no log files. Never log keys, scenario text, feedback or model output.
 - **Why:** stdout logging works the same locally and on the platform, and the log is the easiest place for visitor text to leak.
-- **Status:** Adopting.
+- **Status:** Adopting. For model calls it is Enforced (M4): the adapter and engine log metadata only, the provider SDKs' loggers are capped at WARNING because their debug logs hold request bodies, and a canary test checks that no key or scenario text reaches the logs.
