@@ -41,6 +41,8 @@ LLM_EFFORT: Final = "medium"
 # Thinking tokens count toward max_tokens, so these leave room beyond the answer itself.
 DIAGNOSE_MAX_TOKENS = 8_000
 GENERATE_MAX_TOKENS = 16_000
+# A repair call lists at most this many validation errors, so its prompt stays small.
+REPAIR_MAX_ERRORS = 20
 
 SAMPLES_DIR = Path(__file__).with_name("samples")
 

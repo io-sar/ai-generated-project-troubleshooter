@@ -52,7 +52,7 @@ class ReportSource(StrEnum):
 
 
 class InputClassification(StrEnum):
-    """What stage 1 decided the visitor's text is. Only TROUBLED goes on to stage 2."""
+    """What stage 1 decided the visitor's text is. See `triage.needs_report` for stage 2."""
 
     TROUBLED = "troubled"
     HEALTHY = "healthy"

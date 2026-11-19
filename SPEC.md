@@ -95,7 +95,7 @@ Each sample is a real recorded AI run, generated once by the author with a local
 - Markdown and standalone HTML (inline CSS, print stylesheet, browser Print → PDF) from Jinja2 templates. Each export includes a timestamp, the report's badge and per-item human-adjusted markers.
 
 **Live failure handling**
-- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response, provider unavailable (an outage or a lost connection), request rejected (the provider refused the app's request, which is a bug on the app's side).
+- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response, provider unavailable (an outage or a lost connection), request rejected (the provider refused the app's request, which is a bug on the app's side), invalid answer (the answer still didn't fit the report format after one repair).
 - If stage 2 fails, the diagnosis is kept and a retry repeats only stage 2.
 
 **Visitor keys vary**
@@ -166,7 +166,7 @@ src/troubleshooter/
     anthropic_client.py     # the only provider in v1 (ADR 0006)
     factory.py              # provider + key -> client (never cached)
     errors.py               # provider errors -> friendly, sanitized messages
-  prompts/                  # diagnose.v1.md, generate.v1.md, regenerate.v1.md
+  prompts/                  # diagnose.v1.md, generate.v1.md, repair.v1.md, regenerate.v1.md
   samples/                  # <id>/scenario.yaml, diagnosis.json, draft.json,
                             # final.json, changes.md
   export/                   # renderer.py + templates/report.md.j2, report.html.j2

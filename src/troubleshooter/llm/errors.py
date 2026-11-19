@@ -22,6 +22,8 @@ class LLMErrorKind(StrEnum):
     PROVIDER_UNAVAILABLE = "provider_unavailable"
     # The provider refused the request itself (400, 413, 422): a bug on the app's side.
     REQUEST_REJECTED = "request_rejected"
+    # The answer still didn't fit the report schema after the engine's one repair retry.
+    INVALID_ANSWER = "invalid_answer"
 
 
 class LLMError(Exception):

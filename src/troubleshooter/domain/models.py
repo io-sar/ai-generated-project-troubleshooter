@@ -31,6 +31,9 @@ Rating = Annotated[int, Field(ge=1, le=5)]
 # They are left out of the JSON Schema, so the LLM is never offered them.
 HumanAdjusted = SkipJsonSchema[bool]
 HumanNote = SkipJsonSchema[Text | None]
+# The schema hides these, but Pydantic still accepts them, so an LLM answer that sets any of
+# them is rejected before validation.
+HUMAN_FIELDS = frozenset({"human_adjusted", "note"})
 
 
 class DomainModel(BaseModel):

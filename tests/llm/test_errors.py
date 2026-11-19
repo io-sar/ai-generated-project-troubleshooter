@@ -17,6 +17,7 @@ EXPECTED_KINDS = [
     "truncated",
     "provider_unavailable",
     "request_rejected",
+    "invalid_answer",
 ]
 
 

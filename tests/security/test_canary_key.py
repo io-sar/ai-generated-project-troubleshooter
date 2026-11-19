@@ -3,8 +3,8 @@
 Each case goes through the real factory and adapter. Only the network is replaced, by a
 mock transport, so the key travels the same path a visitor's key does.
 
-Covered so far: the factory and the Anthropic adapter, the only provider in v1 (ADR 0006).
-The engine (#53) and session dumps (M6) join this file when they exist.
+Covered so far: the factory, the Anthropic adapter (the only provider in v1, ADR 0006) and
+the two-stage engine. Session dumps (M6) join this file when they exist.
 """
 
 import logging
@@ -18,6 +18,9 @@ import httpx2
 import pytest
 
 from troubleshooter import config
+from troubleshooter.domain.codes import ProjectType
+from troubleshooter.domain.models import Scenario
+from troubleshooter.engines.llm_engine import LLMEngine, Prompt, Prompts
 from troubleshooter.llm import factory
 from troubleshooter.llm.base import Provider
 from troubleshooter.llm.errors import InvalidOutputError, LLMError
@@ -168,6 +171,28 @@ def test_key_never_reaches_the_client_repr(network: list[Handler]) -> None:
     assert CANARY_KEY not in repr(client)
     assert CANARY_KEY not in str(client)
     assert CANARY_KEY not in repr(vars(client))
+
+
+@pytest.mark.usefixtures("quiet_sdks")
+def test_full_pipeline_keeps_key_and_scenario_out_of_logs_and_errors(
+    network: list[Handler], caplog: pytest.LogCaptureFixture
+) -> None:
+    # Two answers that fail validation, so the run goes through the repair call and fails.
+    network.append(respond(200, message(f'{{"summary": "{CANARY_SCENARIO}"}}')))
+    caplog.set_level(logging.DEBUG)
+    client = factory.create_client(
+        Provider.ANTHROPIC, CANARY_KEY, config.MODELS["anthropic"].default
+    )
+    prompts = Prompts(*(Prompt(name, "v1", name) for name in ("diagnose", "generate", "repair")))
+    scenario = Scenario(project_type=ProjectType.PRODUCT_LAUNCH, text=CANARY_SCENARIO)
+
+    with pytest.raises(LLMError) as caught:
+        LLMEngine(client, prompts).diagnose(scenario)
+
+    shown = "".join(traceback.format_exception(caught.value)) + caplog.text
+    assert "outcome=invalid" in caplog.text
+    for canary in (CANARY_KEY, CANARY_SCENARIO):
+        assert canary not in shown
 
 
 def test_factory_errors_never_echo_the_key() -> None:
