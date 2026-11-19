@@ -1,6 +1,37 @@
 """App settings. Kept here so no path, number or model name is hard-coded elsewhere."""
 
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ModelChoice:
+    """The models offered for one provider.
+
+    Attributes:
+        default: The model selected unless the user picks another.
+        alternatives: The other models offered, in display order.
+    """
+
+    default: str
+    alternatives: tuple[str, ...]
+
+    @property
+    def all(self) -> tuple[str, ...]:
+        """Return the default followed by the alternatives."""
+        return (self.default, *self.alternatives)
+
+
+# Curated list from decision #15. The cheapest model is the default because visitor keys are
+# paid keys, often with little credit. OpenAI publishes no dated snapshots for these models,
+# so their plain IDs are the most exact ones available.
+MODELS = {
+    "anthropic": ModelChoice(
+        default="claude-haiku-5-5",
+        alternatives=("claude-sonnet-5-5", "claude-opus-5-5"),
+    ),
+    "openai": ModelChoice(default="gpt-6-luna", alternatives=("gpt-6.2-sol",)),
+}
 
 SAMPLES_DIR = Path(__file__).with_name("samples")
 
