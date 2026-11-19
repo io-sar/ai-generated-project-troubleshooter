@@ -66,7 +66,8 @@ elif requested in samples:
         state.show_sample(samples[requested])
 
 shown = state.shown_sample()
-if shown is not None:
+report = state.shown_report()
+if shown is not None and report is not None:
     st.divider()
     render_report_header(shown)
     st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))
@@ -78,10 +79,13 @@ if shown is not None:
         format_func=lambda option: t(f"view.{option}"),
         key="report_view",
     )
-    # The reviewed final version is the main report; the AI draft is there to compare.
+    # The final version, with the visitor's edits, is the main report and the only one they
+    # can edit; the AI draft is there to compare.
     if view == "compare":
-        render_comparison(shown)
+        render_comparison(shown, report)
     else:
-        render_report(shown.final)
-    render_downloads(shown, generated_at=datetime.now(UTC))
-    render_under_the_hood(shown.final, shown.diagnosis)
+        # Edits are kept only in this session, never on disk, so say so before any editor.
+        st.warning(t("edit.refresh_warning"))
+        render_report(report, editable=True)
+    render_downloads(shown, report, generated_at=datetime.now(UTC))
+    render_under_the_hood(report, shown.diagnosis)

@@ -4,6 +4,7 @@ To accept an intended change to the output, run once with UPDATE_SNAPSHOTS=1 and
 the diff of tests/export/snapshots/ before committing it.
 """
 
+import dataclasses
 import os
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta, timezone
@@ -12,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from troubleshooter.config import SAMPLES_DIR
-from troubleshooter.domain.models import Sample
+from troubleshooter.domain.codes import Dimension, HealthLabel
+from troubleshooter.domain.models import Report, Sample
 from troubleshooter.engines.sample_engine import load_sample
 from troubleshooter.export.renderer import (
     ExportInput,
@@ -21,6 +23,7 @@ from troubleshooter.export.renderer import (
     render_markdown,
 )
 from troubleshooter.i18n import t
+from troubleshooter.ui.state import RaciEdit, apply_raci_edits, apply_risk_edits, override_health
 
 SNAPSHOTS = Path(__file__).with_name("snapshots")
 FIXED_CLOCK = datetime(2026, 1, 2, 3, 4, tzinfo=UTC)
@@ -96,6 +99,74 @@ def test_note_markdown_is_kept_in_markdown_and_escaped_in_html(
 
 def test_export_files_end_with_one_newline_and_no_trailing_spaces(placeholder: Sample) -> None:
     for render in RENDERERS.values():
-        output = render(export_input(placeholder))
-        assert output.endswith("\n") and not output.endswith("\n\n")
-        assert all(line == line.rstrip() for line in output.splitlines())
+        for data in (export_input(placeholder), edited_input(placeholder)):
+            output = render(data)
+            assert output.endswith("\n") and not output.endswith("\n\n")
+            assert all(line == line.rstrip() for line in output.splitlines())
+
+
+def edited_report(sample: Sample) -> Report:
+    """The placeholder's final version after a fixed set of visitor edits."""
+    original = sample.final
+    rows = [risk.model_dump(exclude={"human_adjusted"}) for risk in original.risks]
+    rows[2]["impact"] = 5
+    report = apply_risk_edits(original, original, rows)
+    raci = [
+        RaciEdit(row.activity, {a.role: a.code for a in row.assignments}) for row in original.raci
+    ]
+    raci.append(RaciEdit("Go-live comms", {"Project manager": "A", "Sponsor": "A"}))
+    report = apply_raci_edits(original, report, raci)
+    return override_health(
+        original, report, Dimension.QUALITY, HealthLabel.AT_RISK, "QA found 17 open defects."
+    )
+
+
+def edited_input(sample: Sample) -> ExportInput:
+    return dataclasses.replace(export_input(sample), report=edited_report(sample))
+
+
+@pytest.mark.parametrize("extension", RENDERERS)
+def test_edited_export_matches_snapshot(placeholder: Sample, extension: str) -> None:
+    output = RENDERERS[extension](edited_input(placeholder))
+    snapshot = SNAPSHOTS / f"placeholder-edited.{extension}"
+    if os.environ.get("UPDATE_SNAPSHOTS") == "1":
+        snapshot.write_text(output, encoding="utf-8", newline="\n")
+    assert output == snapshot.read_text(encoding="utf-8")
+
+
+MARKERS = {
+    "md": r" *(Human\-adjusted)*",
+    "html": f' <span class="badge">{t("edit.marker")}</span>',
+}
+
+
+@pytest.mark.parametrize("extension", RENDERERS)
+def test_each_edited_item_is_marked_once(placeholder: Sample, extension: str) -> None:
+    unedited = RENDERERS[extension](export_input(placeholder))
+    edited = RENDERERS[extension](edited_input(placeholder))
+
+    # One risk, one RACI row and one health dimension were edited.
+    assert MARKERS[extension] not in unedited
+    assert edited.count(MARKERS[extension]) == 3
+
+
+@pytest.mark.parametrize(
+    ("extension", "note"),
+    [
+        ("md", r" — Note\: QA found 17 open defects\. |"),
+        ("html", "<br><em>Note: QA found 17 open defects.</em></td>"),
+    ],
+)
+def test_health_note_follows_the_ai_rationale(
+    placeholder: Sample, extension: str, note: str
+) -> None:
+    output = RENDERERS[extension](edited_input(placeholder))
+
+    assert note in output
+
+
+@pytest.mark.parametrize("extension", RENDERERS)
+def test_raci_row_without_one_accountable_is_flagged(placeholder: Sample, extension: str) -> None:
+    output = RENDERERS[extension](edited_input(placeholder))
+
+    assert output.count(t("raci.needs_one_a")) == 1

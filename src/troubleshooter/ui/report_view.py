@@ -4,15 +4,23 @@ Report text may come from a model, so it is shown with `plain()` or in a datafra
 never as Markdown or HTML.
 """
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 import streamlit as st
 
-from troubleshooter.domain.codes import Dimension, HealthLabel, ReportSource
+from troubleshooter.domain.codes import (
+    Dimension,
+    EscalationLevel,
+    HealthLabel,
+    RaciCode,
+    ReportSource,
+)
 from troubleshooter.domain.models import (
     DecisionMemo,
     Diagnosis,
+    DimensionHealth,
     HealthScores,
     RaciRow,
     Report,
@@ -28,6 +36,7 @@ from troubleshooter.domain.scoring import (
     overall_label,
     overall_score,
     risk_score,
+    suggested_escalation,
 )
 from troubleshooter.export.markdown import escape_markdown as plain
 from troubleshooter.export.renderer import (
@@ -37,6 +46,8 @@ from troubleshooter.export.renderer import (
     render_markdown,
 )
 from troubleshooter.i18n import t
+from troubleshooter.ui import state
+from troubleshooter.ui.state import EditRejected, RaciEdit
 
 BadgeColor = Literal["green", "blue", "orange", "red"]
 
@@ -69,9 +80,10 @@ def render_report_header(sample: Sample) -> None:
         st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
 
 
-def render_comparison(sample: Sample) -> None:
+def render_comparison(sample: Sample, final: Report) -> None:
     """Show the "What I changed" note, then the AI draft and the final version side by side.
 
+    `final` is the final version with any of the visitor's edits, shown read-only here.
     Streamlit stacks the two columns on narrow screens, so phones read them one after
     the other.
     """
@@ -85,17 +97,26 @@ def render_comparison(sample: Sample) -> None:
         render_report(sample.draft)
     with final_column:
         st.header(t("compare.final"), anchor=False)
-        render_report(sample.final)
+        render_report(final)
 
 
-def render_report(report: Report) -> None:
-    """Show every report section, in reading order."""
-    render_health(report.health)
-    render_risks(report.risks)
+def render_report(report: Report, *, editable: bool = False) -> None:
+    """Show every report section, in reading order.
+
+    Pass `editable=True` only for the final version: the AI draft is never edited.
+    """
+    render_health(report.health, editable=editable)
+    if editable:
+        render_risk_editor(report.risks)
+    else:
+        render_risks(report.risks)
     render_recovery_plan(report)
     render_stakeholder_updates(report.stakeholder_updates)
     render_decision_memo(report.decision_memo)
-    render_raci(report.raci)
+    if editable:
+        render_raci_editor(report.raci)
+    else:
+        render_raci(report.raci)
 
 
 def render_stakeholder_updates(updates: StakeholderUpdates) -> None:
@@ -140,9 +161,93 @@ def render_raci(raci: list[RaciRow]) -> None:
         for position, row in enumerate(raci)
     ]
     st.dataframe(rows, hide_index=True)
+    _render_raci_warning(raci, broken)
+
+
+def render_raci_editor(raci: list[RaciRow]) -> None:
+    """Show the RACI matrix as an editable grid of activities by roles.
+
+    The roles are the report's own, so a visitor reassigns codes but can't add a role.
+    Rows without exactly one Accountable are flagged, and can still be applied and exported.
+    """
+    st.subheader(t("raci.title"), anchor=False)
+    st.caption(t("edit.help"))
+    roles = roles_in_order(raci)
+    broken = set(rows_without_one_accountable(raci))
+    with st.form("raci_form", border=False):
+        edited = st.data_editor(
+            [_raci_grid_row(row, roles, position in broken) for position, row in enumerate(raci)],
+            column_config=_raci_columns(roles),
+            disabled=["check", "edited"],
+            num_rows="dynamic",
+            hide_index=True,
+            key=state.editor_key("raci"),
+        )
+        applied = st.form_submit_button(t("edit.apply"), key="raci_apply")
+    _render_raci_warning(raci, broken)
+    if applied:
+        _apply_edits(
+            lambda: state.save_raci_edits(raci_edits_from_grid(edited, roles)),
+            lambda field: t("raci.activity") if field == "activity" else field,
+        )
+
+
+def role_column(position: int) -> str:
+    """The grid key for the role at this position. Role names only label columns."""
+    return f"role_{position}"
+
+
+def raci_edits_from_grid(rows: list[dict[str, Any]], roles: list[str]) -> list[RaciEdit]:
+    """Turn the RACI grid's rows back into one edit per activity, for the state layer."""
+    return [
+        RaciEdit(
+            row.get("activity"),
+            {role: row.get(role_column(position)) for position, role in enumerate(roles)},
+        )
+        for row in rows
+    ]
+
+
+def _raci_grid_row(row: RaciRow, roles: list[str], broken: bool) -> dict[str, Any]:
+    cells = codes_by_role(row, roles)
+    return (
+        {"activity": row.activity}
+        # An empty cell is None, so the dropdown shows it blank rather than as a choice.
+        | {role_column(position): cells[role] or None for position, role in enumerate(roles)}
+        | {
+            "check": t("raci.needs_one_a") if broken else "",
+            "edited": t("edit.marker") if row.human_adjusted else "",
+        }
+    )
+
+
+def _raci_columns(roles: list[str]) -> dict[str, Any]:
+    codes = [code.value for code in RaciCode]
+    return {
+        "activity": t("raci.activity"),
+        "check": t("raci.check"),
+        "edited": t("edit.column"),
+    } | {
+        role_column(position): st.column_config.SelectboxColumn(role, options=codes)
+        for position, role in enumerate(roles)
+    }
+
+
+def _render_raci_warning(raci: list[RaciRow], broken: set[int]) -> None:
     if broken:
         names = ", ".join(raci[position].activity for position in sorted(broken))
         st.warning(t("raci.warning", activities=plain(names)))
+
+
+def _apply_edits(save: Callable[[], None], column_label: Callable[[str], str]) -> None:
+    """Save an editor's changes and redraw, or say which cell to fix and keep the changes."""
+    try:
+        save()
+    except EditRejected as rejected:
+        column = column_label(rejected.field)
+        st.error(t("edit.rejected", row=rejected.row, column=column))
+        return
+    st.rerun()
 
 
 def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
@@ -176,15 +281,48 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
         st.json(diagnosis.model_dump(mode="json"), expanded=False)
 
 
-def render_health(health: HealthScores) -> None:
-    """Show the overall label and each dimension's label and rationale, without numbers."""
+def render_health(health: HealthScores, *, editable: bool = False) -> None:
+    """Show the overall label and each dimension's label and rationale, without numbers.
+
+    With `editable=True`, each dimension also gets a collapsed form to override its label
+    and add a note. The AI rationale always stays visible.
+    """
     st.subheader(t("health.title"), anchor=False)
     overall = overall_label(health)
     st.markdown(f"{t('health.overall')} {_label_badge(overall)}")
     for dimension in Dimension:
-        status = getattr(health, dimension.value)
-        st.markdown(f"**{t(f'dimension.{dimension}')}** {_label_badge(label_for(status.score))}")
+        status: DimensionHealth = getattr(health, dimension.value)
+        heading = f"**{t(f'dimension.{dimension}')}** {_label_badge(label_for(status.score))}"
+        if status.human_adjusted:
+            heading += f" :gray-badge[{t('edit.marker')}]"
+        st.markdown(heading)
         st.caption(plain(status.rationale))
+        if status.note:
+            st.caption(t("edit.note_shown", note=plain(status.note)))
+        if editable:
+            _render_health_override(dimension, status)
+
+
+def _render_health_override(dimension: Dimension, status: DimensionHealth) -> None:
+    name = t(f"dimension.{dimension}")
+    labels = list(HealthLabel)
+    with st.expander(t("edit.adjust")), st.form(f"health_{dimension}_form", border=False):
+        label = st.selectbox(
+            t("edit.label_for", dimension=name),
+            labels,
+            index=labels.index(label_for(status.score)),
+            format_func=lambda code: t(f"health_label.{code}"),
+            key=state.editor_key(f"health_{dimension}_label"),
+        )
+        note = st.text_input(
+            t("edit.note_for", dimension=name),
+            value=status.note or "",
+            key=state.editor_key(f"health_{dimension}_note"),
+        )
+        applied = st.form_submit_button(t("edit.apply"), key=f"health_{dimension}_apply")
+    if applied:
+        state.save_health_override(dimension, label, note)
+        st.rerun()
 
 
 def render_risks(risks: list[Risk]) -> None:
@@ -205,6 +343,85 @@ def render_risks(risks: list[Risk]) -> None:
         for risk in risks
     ]
     st.dataframe(rows, hide_index=True)
+
+
+# Risk editor columns, keyed by code; derived and display-only columns can't be edited.
+_RISK_LABELS = {
+    "id": "risks.id",
+    "description": "risks.description",
+    "likelihood": "risks.likelihood",
+    "impact": "risks.impact",
+    "score": "risks.score",
+    "owner": "risks.owner",
+    "mitigation": "risks.mitigation",
+    "escalation": "risks.escalation",
+    "suggested": "risks.suggested",
+    "signals": "risks.signals",
+    "edited": "edit.column",
+}
+_RISK_READ_ONLY = ["id", "score", "suggested", "signals", "edited"]
+
+
+def render_risk_editor(risks: list[Risk]) -> None:
+    """Show the risk register as an editable table, applied with one button.
+
+    Edits are applied together so a visitor can fill a new row cell by cell. A rejected
+    edit stays in the table, so the visitor can fix it.
+    """
+    st.subheader(t("risks.title"), anchor=False)
+    st.caption(t("edit.help"))
+    with st.form("risk_form", border=False):
+        edited = st.data_editor(
+            [_risk_row(risk) for risk in risks],
+            column_config=_risk_columns(),
+            disabled=_RISK_READ_ONLY,
+            num_rows="dynamic",
+            hide_index=True,
+            key=state.editor_key("risks"),
+        )
+        applied = st.form_submit_button(t("edit.apply"), key="risks_apply")
+    if applied:
+        _apply_edits(
+            lambda: state.save_risk_edits(edited),
+            lambda field: t(_RISK_LABELS[field]),
+        )
+
+
+def _risk_row(risk: Risk) -> dict[str, object]:
+    score = risk_score(risk)
+    return {
+        "id": risk.id,
+        "description": risk.description,
+        "likelihood": risk.likelihood,
+        "impact": risk.impact,
+        "score": score,
+        "owner": risk.owner,
+        "mitigation": risk.mitigation,
+        "escalation": risk.escalation.value,
+        "suggested": t(f"escalation.{suggested_escalation(score)}"),
+        # Display text under its own key, which the state layer ignores, so the risk keeps
+        # its links and new risks start with none.
+        "signals": ", ".join(risk.signal_ids),
+        "edited": t("edit.marker") if risk.human_adjusted else "",
+    }
+
+
+def _risk_columns() -> dict[str, Any]:
+    labels = {name: t(key) for name, key in _RISK_LABELS.items()}
+    return labels | {
+        "likelihood": _rating_column(labels["likelihood"]),
+        "impact": _rating_column(labels["impact"]),
+        "escalation": st.column_config.SelectboxColumn(
+            labels["escalation"],
+            options=[level.value for level in EscalationLevel],
+            format_func=lambda code: t(f"escalation.{code}"),
+        ),
+    }
+
+
+def _rating_column(label: str) -> Any:
+    # The editor's own limits; the state layer checks them again when edits are applied.
+    return st.column_config.NumberColumn(label, min_value=1, max_value=5, step=1)
 
 
 def render_recovery_plan(report: Report) -> None:
@@ -239,10 +456,10 @@ def _label_badge(label: HealthLabel) -> str:
     return f":{_LABEL_COLORS[label]}-badge[{t(f'health_label.{label}')}]"
 
 
-def render_downloads(sample: Sample, generated_at: datetime) -> None:
-    """Offer the final version as Markdown and as print-ready HTML."""
+def render_downloads(sample: Sample, report: Report, generated_at: datetime) -> None:
+    """Offer the final version, with the visitor's edits, as Markdown and print-ready HTML."""
     data = ExportInput(
-        report=sample.final,
+        report=report,
         title=sample.title,
         source=sample.badge,
         scenario=sample.scenario,

@@ -29,10 +29,21 @@ def poison(node: Any, key: str = "") -> Any:
     return node
 
 
+def marked(data: dict[str, Any]) -> dict[str, Any]:
+    """Mark every editable item as human-adjusted and give each dimension a note."""
+    for risk in data["risks"]:
+        risk["human_adjusted"] = True
+    for row in data["raci"]:
+        row["human_adjusted"] = True
+    for dimension in data["health"].values():
+        dimension |= {"human_adjusted": True, "note": PAYLOAD}
+    return data
+
+
 @pytest.fixture(scope="module")
 def hostile() -> ExportInput:
     return ExportInput(
-        report=Report.model_validate(poison(report_data())),
+        report=Report.model_validate(marked(poison(report_data()))),
         title=PAYLOAD,
         source=ReportSource.LIVE,
         scenario=Scenario(
@@ -46,6 +57,27 @@ def test_poisoned_report_reaches_every_text_field(hostile: ExportInput) -> None:
     dumped = hostile.report.model_dump_json()
 
     assert dumped.count("evil.example/t.png") > 20
+
+
+def test_notes_reach_the_poisoned_export(hostile: ExportInput) -> None:
+    # Five dimensions, each with a hostile note, so the counts below include the notes.
+    notes = [
+        getattr(hostile.report.health, name).note
+        for name in type(hostile.report.health).model_fields
+    ]
+
+    assert notes == [PAYLOAD] * 5
+
+
+@pytest.mark.parametrize(
+    ("render", "escaped_note"),
+    [
+        (render_html, "Note: &lt;script&gt;alert(1)&lt;/script&gt;"),
+        (render_markdown, r"Note\: \<script\>alert\(1\)\</script\>"),
+    ],
+)
+def test_note_is_escaped(hostile: ExportInput, render: Any, escaped_note: str) -> None:
+    assert render(hostile).count(escaped_note) == 5
 
 
 def test_html_escapes_every_field(hostile: ExportInput) -> None:
