@@ -70,7 +70,6 @@ report = state.shown_report()
 if shown is not None and report is not None:
     st.divider()
     render_report_header(shown)
-    st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))
     view = st.segmented_control(
         t("view.label"),
         ["final", "compare"],
@@ -89,3 +88,5 @@ if shown is not None and report is not None:
         render_report(report, editable=True)
     render_downloads(shown, report, generated_at=datetime.now(UTC))
     render_under_the_hood(report, shown.diagnosis)
+    # After the report, so a reader sees the result first and the build story last.
+    st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))

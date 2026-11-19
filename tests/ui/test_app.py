@@ -552,16 +552,19 @@ def test_sidebar_shows_the_builder_and_their_links() -> None:
     assert app.sidebar.caption[0].value == t("about.role")
     assert f"[{t('about.linkedin')}]({config.BUILDER_LINKEDIN_URL})" in sidebar_text(app)
     assert f"[{t('about.repo')}]({config.REPO_URL})" in sidebar_text(app)
-    assert [link.label for link in app.sidebar.page_link] == [t("how.link")]
+    # The page menu already lists How this was built, so the sidebar doesn't repeat it.
+    assert not app.sidebar.page_link
 
 
-def test_results_screen_links_to_how_this_was_built() -> None:
+def test_results_screen_links_to_how_this_was_built_after_the_report() -> None:
     before = run_app()
     after = run_app(sample="placeholder")
 
     main_links = [link.label for link in after.main.page_link]
     assert main_links == [t("how.link")]
     assert not before.main.page_link
+    # The reader sees the whole report first; the build story comes last.
+    assert list(after.main)[-1] == after.main.page_link[0]
 
 
 def how_built_page() -> AppTest:
