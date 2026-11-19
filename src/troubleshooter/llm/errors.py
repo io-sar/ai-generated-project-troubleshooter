@@ -20,6 +20,8 @@ class LLMErrorKind(StrEnum):
     TRUNCATED = "truncated"
     # A provider outage or a lost connection, after the SDK's own retries.
     PROVIDER_UNAVAILABLE = "provider_unavailable"
+    # The provider refused the request itself (400, 413, 422): a bug on the app's side.
+    REQUEST_REJECTED = "request_rejected"
 
 
 class LLMError(Exception):
@@ -34,3 +36,11 @@ class LLMError(Exception):
         # with the same kind. As a StrEnum it prints as the bare code.
         super().__init__(kind)
         self.kind = kind
+
+
+class InvalidOutputError(ValueError):
+    """The model answered, but not with a JSON object.
+
+    Structured output makes this rare. The engine treats it like output that fails schema
+    validation, so it gets the one repair retry. The message never includes the output.
+    """

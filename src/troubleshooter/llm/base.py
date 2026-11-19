@@ -17,7 +17,9 @@ class LLMClient(Protocol):
     Engines receive a client and never create one, so tests can pass a fake.
     """
 
-    def complete_structured(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+    def complete_structured(
+        self, system: str, user: str, schema: dict[str, Any], max_tokens: int
+    ) -> dict[str, Any]:
         """Return the model's answer as a JSON object shaped by `schema`.
 
         Args:
@@ -25,11 +27,14 @@ class LLMClient(Protocol):
             user: The user message, with any untrusted text already wrapped in delimiters.
             schema: The JSON Schema of the expected answer, as Pydantic generates it. The
                 client adapts it to what its provider supports.
+            max_tokens: The most tokens the model may produce, set per stage in `config.py`.
 
         Returns:
             The parsed JSON object. The caller validates it against its Pydantic model.
 
         Raises:
             LLMError: The call failed. Its `kind` says why.
+            InvalidOutputError: The answer wasn't a JSON object. The caller treats it like
+                output that fails validation.
         """
         ...

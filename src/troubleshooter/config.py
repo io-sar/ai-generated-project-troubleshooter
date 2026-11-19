@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,16 @@ MODELS = {
     ),
     "openai": ModelChoice(default="gpt-6-luna", alternatives=("gpt-6.2-sol",)),
 }
+
+# Timeout and retries are chosen together (ADR 0004): one call waits at most about
+# LLM_TIMEOUT_SECONDS * (LLM_MAX_RETRIES + 1). The SDK is the only layer that retries.
+LLM_TIMEOUT_SECONDS = 120.0
+LLM_MAX_RETRIES = 1
+# How much the model reasons before answering. Thinking is always on in current Claude models.
+LLM_EFFORT: Final = "medium"
+# Thinking tokens count toward max_tokens, so these leave room beyond the answer itself.
+DIAGNOSE_MAX_TOKENS = 8_000
+GENERATE_MAX_TOKENS = 16_000
 
 SAMPLES_DIR = Path(__file__).with_name("samples")
 

@@ -95,7 +95,7 @@ Each sample is a real recorded AI run, generated once by the author with a local
 - Markdown and standalone HTML (inline CSS, print stylesheet, browser Print → PDF) from Jinja2 templates. Each export includes a timestamp, the report's badge and per-item human-adjusted markers.
 
 **Live failure handling**
-- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response, provider unavailable (an outage or a lost connection).
+- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response, provider unavailable (an outage or a lost connection), request rejected (the provider refused the app's request, which is a bug on the app's side).
 - If stage 2 fails, the diagnosis is kept and a retry repeats only stage 2.
 
 **Visitor keys vary**
@@ -162,7 +162,7 @@ src/troubleshooter/
     sample_engine.py        # returns recorded samples (AnalysisEngine only)
     llm_engine.py           # two-stage Live pipeline; also a SectionRegenerator
   llm/
-    base.py                 # LLMClient protocol: complete_structured(system, user, schema)
+    base.py                 # LLMClient protocol: complete_structured(system, user, schema, max_tokens)
     anthropic_client.py
     openai_client.py
     factory.py              # provider + key -> client (never cached)

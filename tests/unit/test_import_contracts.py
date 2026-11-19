@@ -14,6 +14,7 @@ import pytest
 
 ROOT = Path(__file__).parents[2]
 LINT_IMPORTS = Path(sys.executable).parent / "lint-imports"
+THIRD_PARTY = ("anthropic",)
 
 
 def run_lint_imports(
@@ -23,8 +24,10 @@ def run_lint_imports(
     shutil.copytree(ROOT / "src" / "troubleshooter", src / "troubleshooter")
     if planted is not None:
         importer, imported = planted
+        # A bare name is a project package; a name in THIRD_PARTY is planted as is.
+        module = imported if imported in THIRD_PARTY else f"troubleshooter.{imported}"
         (src / "troubleshooter" / importer / "planted.py").write_text(
-            f"import troubleshooter.{imported}\n", encoding="utf-8"
+            f"import {module}\n", encoding="utf-8"
         )
     # PYTHONPATH puts the copy ahead of the installed package.
     env = {**os.environ, "PYTHONPATH": str(src)}
@@ -65,6 +68,9 @@ def test_clean_copy_keeps_all_contracts(tmp_path: Path) -> None:
         ("engines", "export"),
         ("export", "llm"),
         ("ui", "llm"),
+        ("engines", "anthropic"),
+        ("domain", "anthropic"),
+        ("ui", "anthropic"),
     ],
 )
 def test_forbidden_import_breaks_a_contract(tmp_path: Path, importer: str, imported: str) -> None:
@@ -79,6 +85,7 @@ def test_forbidden_import_breaks_a_contract(tmp_path: Path, importer: str, impor
         ("export", "i18n"),
         ("ui", "engines"),
         ("ui", "export"),
+        ("llm", "anthropic"),
     ],
 )
 def test_allowed_import_keeps_all_contracts(tmp_path: Path, importer: str, imported: str) -> None:

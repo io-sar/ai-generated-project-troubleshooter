@@ -9,10 +9,12 @@ class FakeClient:
 
     def __init__(self, answer: dict[str, Any]) -> None:
         self.answer = answer
-        self.calls: list[tuple[str, str, dict[str, Any]]] = []
+        self.calls: list[tuple[str, str, dict[str, Any], int]] = []
 
-    def complete_structured(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
-        self.calls.append((system, user, schema))
+    def complete_structured(
+        self, system: str, user: str, schema: dict[str, Any], max_tokens: int
+    ) -> dict[str, Any]:
+        self.calls.append((system, user, schema, max_tokens))
         return self.answer
 
 
@@ -28,7 +30,7 @@ def test_a_fake_client_meets_the_protocol() -> None:
     fake = FakeClient({"ok": True})
     client: LLMClient = fake
 
-    answer = client.complete_structured("system", "user", {"type": "object"})
+    answer = client.complete_structured("system", "user", {"type": "object"}, 100)
 
     assert answer == {"ok": True}
-    assert fake.calls == [("system", "user", {"type": "object"})]
+    assert fake.calls == [("system", "user", {"type": "object"}, 100)]
