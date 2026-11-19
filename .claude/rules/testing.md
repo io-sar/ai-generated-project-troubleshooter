@@ -11,3 +11,5 @@ paths:
 - For domain logic (scoring, the RACI rule, recalculation, the state layer), write the failing test first.
 - Start every bug fix with a test that fails because of the bug.
 - If a test fails intermittently, stop and report it instead of re-running until it passes. Propose an issue to fix or delete it.
+- A negative test asserts the specific error or rejection, not just that nothing crashed.
+- For each external dependency, cover timeout, connection error, rate limit, error response and malformed output with a fake or a recorded response.

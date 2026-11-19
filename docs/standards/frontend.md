@@ -6,7 +6,7 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Accessibility from the first screen
 - **Rule:** Aim for WCAG 2.2 AA within what Streamlit allows: every widget has a meaningful label, status is never shown by colour alone, and contrast is sufficient in the theme.
 - **Why:** Retrofitting accessibility is far more expensive than building it in. Recruiters may use assistive technology or phones.
-- **Status:** Labels and colour rules are Adopting. A manual keyboard and contrast check, alongside the phone layout check, is planned for M2. Automated accessibility checks in CI aren't practical with `AppTest`, which has no browser.
+- **Status:** Labels and colour rules are Adopting. A manual keyboard and contrast check, alongside the phone layout check, is planned for M8. Automated accessibility checks in CI aren't practical with `AppTest`, which has no browser.
 
 ## Internationalisation
 - **Rule:** All UI text goes through `t()`, fixed values are stored as codes, and dates and numbers are formatted for the selected language.

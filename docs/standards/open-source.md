@@ -19,12 +19,12 @@ The repository is public as a portfolio piece and doesn't accept outside contrib
 ## Community health files
 - **Rule:** Provide README, LICENSE, `SECURITY.md`, and issue and pull request templates.
 - **Why:** These files answer the questions every visitor has.
-- **Status:** README, LICENSE and the templates exist. `SECURITY.md` is planned for M2.
+- **Status:** README, LICENSE and the templates exist. `SECURITY.md` is planned for M6 ([#69](https://github.com/io-sar/ai-generated-project-troubleshooter/issues/69)).
 
 ## Private vulnerability reporting
 - **Rule:** `SECURITY.md` explains how to report a vulnerability privately, and GitHub's private vulnerability reporting is enabled.
 - **Why:** Without a private channel, vulnerabilities get reported in public issues.
-- **Status:** Planned for M2.
+- **Status:** Planned for M6 ([#69](https://github.com/io-sar/ai-generated-project-troubleshooter/issues/69)).
 
 ## Public, predictable releases
 - **Rule:** Semantic Versioning, tagged releases (`v0.1.0`, `v1.0.0`) and GitHub release notes from the changelog.
@@ -39,7 +39,7 @@ The repository is public as a portfolio piece and doesn't accept outside contrib
 ## Licence and supply-chain transparency
 - **Rule:** SPDX licence identifiers in source files, a software bill of materials (SBOM) per release, and the OpenSSF Scorecard.
 - **Why:** Readers can check licences and security posture.
-- **Status:** Scorecard is planned for M2 (with the pipeline checks). SPDX headers and an SBOM are planned for Release v1.0.
+- **Status:** Scorecard is planned for M8 (with the pipeline checks). SPDX headers and an SBOM are planned for Release v1.0.
 
 ## Sustainability
 - **Rule:** State plainly how the project is maintained: a personal portfolio project, maintained on a best-effort basis.

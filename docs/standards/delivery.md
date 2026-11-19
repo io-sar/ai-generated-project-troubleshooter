@@ -11,17 +11,17 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Pipelines as code, fast feedback
 - **Rule:** The pipeline lives in the repo. Every job has a timeout, and superseded runs on the same branch are cancelled.
 - **Why:** Slow or stuck pipelines get bypassed.
-- **Status:** Pipelines-as-code is Enforced. Job timeouts are Adopting. Cancelling superseded runs is planned for M2.
+- **Status:** Pipelines-as-code is Enforced. Job timeouts are Adopting. Cancelling superseded runs is planned for M8.
 
 ## Pipeline security
 - **Rule:** The workflow token is read-only by default. Third-party actions are pinned to a full commit SHA with a version comment, and Dependabot updates the pins. `pull_request_target` is never combined with a checkout of the pull request's code.
 - **Why:** A moved action tag can run someone else's code in your pipeline.
-- **Status:** The read-only token is Enforced. SHA pinning is Adopting for new actions; pinning the existing actions is planned for M2.
+- **Status:** The read-only token is Enforced. SHA pinning is Adopting for new actions; pinning the existing actions is planned for M6 ([#69](https://github.com/io-sar/ai-generated-project-troubleshooter/issues/69)).
 
 ## Automated pipeline checks
 - **Rule:** Lint the workflows (actionlint), scan them for security issues (zizmor), and run the OpenSSF Scorecard on a schedule.
 - **Why:** Pipeline misconfigurations are invisible in normal reviews.
-- **Status:** Planned for M2.
+- **Status:** Planned for M8.
 
 ## Flaky tests are quarantined
 - **Rule:** An intermittently failing test gets an issue and is fixed or deleted. It is never re-run until green as a habit.
