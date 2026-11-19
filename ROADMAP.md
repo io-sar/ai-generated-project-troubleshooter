@@ -189,3 +189,4 @@ Not planned yet, and left out of v1 on purpose:
 - File uploads, such as status reports and Jira exports.
 - Integrations with Jira, Slack and email.
 - Accounts and saved history.
+- Rule-based mode: a short questionnaire scored by the author's own delivery rules, for a report with no API key and no cost.
