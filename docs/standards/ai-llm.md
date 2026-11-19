@@ -36,7 +36,7 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 - **Status:** Versioned files are documented in CLAUDE.md. The header is Adopting.
 
 ## Structured outputs
-- **Rule:** Request structured output (Claude tool use, the OpenAI JSON-schema response format), validate it against the Pydantic schema, make one repair retry, then show a friendly error.
+- **Rule:** Request structured output (Claude structured outputs, the OpenAI JSON-schema response format), validate it against the Pydantic schema, make one repair retry, then show a friendly error.
 - **Why:** Schema validation turns vague failures into detectable, testable ones.
 - **Status:** Documented in SPEC section 8. Schema fit with both providers is enforced by `tests/llm/test_schema_fit.py`.
 

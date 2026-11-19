@@ -137,7 +137,7 @@ Each sample is a real recorded AI run, generated once by the author with a local
 | UI / hosting | **Streamlit** on Community Cloud | Gradio on HF Spaces; FastAPI + React on Vercel/Render | Free one-click deploy from GitHub and fast to build data tables and editors. Trade-off: less UI control, and full reruns need care with state. |
 | Language | **Python 3.12** | — | Native to Streamlit and both SDKs. |
 | Schemas | **Pydantic v2** | dataclasses, TypedDict | Validation, JSON Schema generation for structured LLM output, and one contract shared by all engines. |
-| LLM access | **Official `anthropic` + `openai` SDKs behind an `LLMClient` protocol** | LiteLLM; LangChain | Thin, explicit adapters show design skill and keep structured output reliable (Claude tool use / OpenAI JSON-schema response format). Trade-off: two adapters to maintain, and schemas must stay simple enough for both providers. |
+| LLM access | **Official `anthropic` + `openai` SDKs behind an `LLMClient` protocol** | LiteLLM; LangChain | Thin, explicit adapters show design skill and keep structured output reliable (Claude structured outputs / OpenAI JSON-schema response format). Current Claude models reject forced tool use, so the Claude adapter doesn't use it. Trade-off: two adapters to maintain, and schemas must stay simple enough for both providers. |
 | Prompts | **Versioned Markdown files** (`prompts/diagnose.v1.md`, …) | Inline strings; a prompt framework | Reviewable in GitHub and diffable; the version is recorded in the output. |
 | Templating/export | **Jinja2** → MD/HTML | WeasyPrint/fpdf2 PDF | No native dependencies, so deploys are reliable. |
 | i18n | **YAML string catalogs + `t()` helper** | gettext/Babel | Simple, and parity between languages is checkable in tests. Trade-off: no pluralization rules (not needed). |
@@ -208,7 +208,7 @@ The package is installed through `requirements.txt` so `src/` imports work on St
 - **Explainability:** "Under the hood" shows signals, diagnosis and prompt version, so the reasoning is visible in the app.
 
 ## 9. Open items for implementation
-- The curated model list per provider (confirm at build time; configurable in `config.py`).
+- The curated model list per provider. Decided in #15: the cheapest model of each provider as the default, plus mid-range alternatives, kept in `config.py`.
 - Weights for the overall health rating, the fixed score behind each label, and the mapping from risk score to escalation level (documented in an ADR).
 - Scenario text and key points for the 5 samples, then recording and review.
 
