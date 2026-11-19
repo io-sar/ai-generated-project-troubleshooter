@@ -2,7 +2,7 @@
 
 A public web app that assesses a troubled project and produces a recovery pack: health ratings, risks, a recovery plan, stakeholder updates, a decision memo and a RACI matrix. It is built with AI coding tools, and the delivery judgment behind it is the author's. The full requirements are in [SPEC.md](SPEC.md).
 
-**Current status:** M3 done: visitors can edit the risk register, the RACI matrix and the health labels on a sample's final version, and their edits reach both downloads with human-adjusted markers. The AI draft stays read-only. Next up: M4.
+**Current status:** M4 done: the two-stage AI pipeline runs from a local script. A real Claude run produced a valid diagnosis and report, the adapter is tested against recorded real responses, and keys and scenario text stay out of logs and errors. Claude is the only provider in v1 (ADR 0006). Next up: M5.
 
 **Live tracking:** work, risks and decisions are on the [project board](https://github.com/users/io-sar/projects/5).
 
