@@ -81,21 +81,41 @@ def render_report_header(sample: Sample) -> None:
         st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
 
 
-def render_comparison(sample: Sample, final: Report) -> None:
+def render_changes(sample: Sample) -> None:
+    """Show the author's "What I changed" note."""
+    st.subheader(t("compare.changes"), anchor=False)
+    # The note is the author's own text from the repo, so Markdown is allowed; HTML never is.
+    st.markdown(sample.changes)
+
+
+def render_short_result(sample: Sample) -> None:
+    """Show the short result for a project that got no full report, such as a healthy one.
+
+    The diagnosis's summary and things to watch are the whole result, followed by the
+    author's note.
+    """
+    diagnosis = sample.diagnosis
+    st.subheader(t(f"input_classification.{diagnosis.classification}"), anchor=False)
+    st.markdown(plain(diagnosis.summary))
+    if diagnosis.things_to_watch:
+        st.markdown(f"**{t('short.things_to_watch')}**")
+        st.markdown("\n".join(f"- {plain(item)}" for item in diagnosis.things_to_watch))
+    render_changes(sample)
+
+
+def render_comparison(sample: Sample, draft: Report, final: Report) -> None:
     """Show the "What I changed" note, then the AI draft and the final version side by side.
 
     `final` is the final version with any of the visitor's edits, shown read-only here.
     Streamlit stacks the two columns on narrow screens, so phones read them one after
     the other.
     """
-    st.subheader(t("compare.changes"), anchor=False)
-    # The note is the author's own text from the repo, so Markdown is allowed; HTML never is.
-    st.markdown(sample.changes)
+    render_changes(sample)
     draft_column, final_column = st.columns(2)
     with draft_column:
         st.header(t("compare.draft"), anchor=False)
         # Read-only by design: the draft records what the AI produced.
-        render_report(sample.draft)
+        render_report(draft)
     with final_column:
         st.header(t("compare.final"), anchor=False)
         render_report(final)
@@ -251,9 +271,12 @@ def _apply_edits(save: Callable[[], None], column_label: Callable[[str], str]) -
     st.rerun()
 
 
-def render_under_the_hood(report: Report, diagnosis: Diagnosis, run: RunInfo | None = None) -> None:
-    """Show the numbers and data behind the report, for readers who want the detail.
+def render_under_the_hood(
+    report: Report | None, diagnosis: Diagnosis, run: RunInfo | None = None
+) -> None:
+    """Show the numbers and data behind the result, for readers who want the detail.
 
+    `report` is None for a project that got no full report, so there are no scores.
     `run` says how a recorded sample was made, so a reader can trace it to the model and
     prompts. Samples that weren't recorded from a model, such as the placeholder, have none.
     """
@@ -261,19 +284,8 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis, run: RunInfo | N
         st.markdown(f"**{t('hood.engine')}:** {t('hood.sample_engine')}")
         if run is not None:
             render_run(run)
-        scores = dimension_scores(report.health)
-        rows = [
-            {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
-            for dimension, score in scores.items()
-        ]
-        rows.append(
-            {
-                t("hood.dimension"): t("health.overall"),
-                t("hood.score"): overall_score(report.health),
-            }
-        )
-        st.markdown(f"**{t('hood.scores')}**")
-        st.dataframe(rows, hide_index=True)
+        if report is not None:
+            render_scores(report.health)
         st.markdown(f"**{t('hood.signals')}**")
         signals = [
             {
@@ -286,6 +298,17 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis, run: RunInfo | N
         st.dataframe(signals, hide_index=True)
         st.markdown(f"**{t('hood.diagnosis')}**")
         st.json(diagnosis.model_dump(mode="json"), expanded=False)
+
+
+def render_scores(health: HealthScores) -> None:
+    """Show each dimension's score and the overall score as a table."""
+    rows = [
+        {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
+        for dimension, score in dimension_scores(health).items()
+    ]
+    rows.append({t("hood.dimension"): t("health.overall"), t("hood.score"): overall_score(health)})
+    st.markdown(f"**{t('hood.scores')}**")
+    st.dataframe(rows, hide_index=True)
 
 
 def render_run(run: RunInfo) -> None:

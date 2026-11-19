@@ -11,7 +11,14 @@ Derived values (labels, overall rating, risk score) are calculated in `scoring`,
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 from pydantic.json_schema import SkipJsonSchema
 
 from troubleshooter.domain.codes import (
@@ -174,7 +181,8 @@ class Sample(DomainModel):
     """A stored demo run: the scenario, the AI's diagnosis and draft, and the final version.
 
     `changes` is the "What I changed" note, in Markdown. `run` is missing for the
-    placeholder sample, which wasn't recorded from a model.
+    placeholder sample, which wasn't recorded from a model. `draft` and `final` are both
+    missing for a project that got no full report, such as a healthy one.
     """
 
     id: Text
@@ -182,10 +190,16 @@ class Sample(DomainModel):
     badge: ReportSource
     scenario: Scenario
     diagnosis: Diagnosis
-    draft: Report
-    final: Report
+    draft: Report | None = None
+    final: Report | None = None
     changes: Text
     run: RunInfo | None = None
+
+    @model_validator(mode="after")
+    def _draft_and_final_come_together(self) -> Sample:
+        if (self.draft is None) != (self.final is None):
+            raise ValueError("a sample has both a draft and a final version, or neither")
+        return self
 
     @field_validator("badge")
     @classmethod

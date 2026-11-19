@@ -133,7 +133,9 @@ def test_health_label_override_shows_the_marker_and_recalculates() -> None:
 
 def test_health_note_appears_beside_the_ai_rationale() -> None:
     app = run_app(sample="placeholder")
-    rationale = load_sample(config.SAMPLES_DIR, "placeholder").final.health.quality.rationale
+    final = load_sample(config.SAMPLES_DIR, "placeholder").final
+    assert final is not None
+    rationale = final.health.quality.rationale
 
     override_health(app, "quality", "problematic", "QA *signed* off.")
 
@@ -323,9 +325,33 @@ def test_broken_sample_shows_a_friendly_error(sample_copy: Path) -> None:
     assert not shows_report(app)
 
 
+def test_healthy_sample_shows_the_short_result(sample_copy: Path) -> None:
+    diagnosis = json.loads((sample_copy / "diagnosis.json").read_text(encoding="utf-8"))
+    diagnosis |= {"classification": "healthy", "things_to_watch": ["Vendor *SLA* review"]}
+    (sample_copy / "diagnosis.json").write_text(json.dumps(diagnosis), encoding="utf-8")
+    (sample_copy / "draft.json").unlink()
+    (sample_copy / "final.json").unlink()
+
+    app = run_app(sample="placeholder")
+
+    assert not app.exception
+    assert t("input_classification.healthy") in [element.value for element in app.subheader]
+    assert escape_markdown(diagnosis["summary"]) in markdown_text(app)
+    assert f"- {escape_markdown('Vendor *SLA* review')}" in markdown_text(app)
+    assert t("compare.changes") in [element.value for element in app.subheader]
+    # No report, so nothing to edit, compare or download, and no scores under the hood.
+    assert not app.segmented_control
+    assert not app.data_editor
+    assert not app.get("download_button")
+    assert len(app.expander[-1].dataframe) == 1
+    assert [link.label for link in app.main.page_link] == [t("how.link")]
+
+
 def test_stakeholder_updates_have_one_copyable_tab_each() -> None:
     app = run_app(sample="placeholder")
-    final = load_sample(config.SAMPLES_DIR, "placeholder").final.stakeholder_updates
+    report = load_sample(config.SAMPLES_DIR, "placeholder").final
+    assert report is not None
+    final = report.stakeholder_updates
 
     assert [tab.label for tab in app.tabs] == [
         t("updates.executive"),

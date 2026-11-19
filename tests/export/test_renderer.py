@@ -32,6 +32,7 @@ RENDERERS: dict[str, Renderer] = {"md": render_markdown, "html": render_html}
 
 
 def export_input(sample: Sample, *, with_note: bool = True) -> ExportInput:
+    assert sample.final is not None
     return ExportInput(
         report=sample.final,
         title=sample.title,
@@ -108,6 +109,7 @@ def test_export_files_end_with_one_newline_and_no_trailing_spaces(placeholder: S
 def edited_report(sample: Sample) -> Report:
     """The placeholder's final version after a fixed set of visitor edits."""
     original = sample.final
+    assert original is not None
     rows = [risk.model_dump(exclude={"human_adjusted"}) for risk in original.risks]
     rows[2]["impact"] = 5
     report = apply_risk_edits(original, original, rows)

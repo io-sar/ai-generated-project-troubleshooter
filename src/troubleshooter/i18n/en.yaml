@@ -165,6 +165,9 @@ hood:
   evidence: Evidence
   diagnosis: Diagnosis JSON
 
+short:
+  things_to_watch: Things to watch
+
 errors:
   sample_not_found: That sample doesn't exist. Pick one from the list below.
   no_samples: The samples can't be loaded right now. Please try again later.

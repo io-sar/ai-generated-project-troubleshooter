@@ -477,6 +477,7 @@ def test_shown_report_is_the_final_version_until_edited() -> None:
 def test_saved_edits_build_on_each_other() -> None:
     sample = make_sample()
     state.show_sample(sample)
+    assert sample.final is not None
 
     state.save_risk_edits(risk_rows(sample.final)[1:])
     state.save_raci_edits([])
@@ -503,6 +504,7 @@ def test_showing_a_sample_clears_earlier_edits() -> None:
 def test_rejected_edit_leaves_the_shown_report_unchanged() -> None:
     sample = make_sample()
     state.show_sample(sample)
+    assert sample.final is not None
     state.save_risk_edits(risk_rows(sample.final)[1:])
     before = state.shown_report()
     rows = risk_rows(sample.final)

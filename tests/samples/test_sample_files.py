@@ -18,6 +18,9 @@ SAMPLE_IDS = list_sample_ids(SAMPLES_DIR)
 
 
 def reports(sample: Sample) -> dict[str, Report]:
+    """The draft and final version, or nothing for a project that got no report."""
+    if sample.draft is None or sample.final is None:
+        return {}
     return {"draft": sample.draft, "final": sample.final}
 
 
@@ -80,9 +83,10 @@ def test_ids_are_unique(sample_id: str) -> None:
 
 @pytest.mark.parametrize("sample_id", SAMPLE_IDS)
 def test_final_differs_from_draft(sample_id: str) -> None:
-    sample = load_sample(SAMPLES_DIR, sample_id)
+    versions = reports(load_sample(SAMPLES_DIR, sample_id))
 
-    assert sample.final != sample.draft
+    # A project with no report has nothing to correct, so it has no final version either.
+    assert not versions or versions["final"] != versions["draft"]
 
 
 def test_placeholder_is_labelled_as_one() -> None:

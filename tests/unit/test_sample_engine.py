@@ -71,6 +71,7 @@ def test_loads_a_valid_sample(tmp_path: Path) -> None:
     assert sample.id == "vendor"
     assert sample.badge is ReportSource.PLACEHOLDER
     assert sample.scenario.key_points == ["Vendor slip"]
+    assert sample.final is not None
     assert sample.final.stakeholder_updates.executive == "Edited by the author."
     assert sample.changes == "I shortened the executive update."
 
@@ -318,3 +319,60 @@ def test_unknown_provider_is_a_problem(tmp_path: Path) -> None:
     assert recording_problems(run, tmp_path) == [
         "model claude-haiku-5-5 is no longer offered for openai"
     ]
+
+
+# Projects that get no full report
+
+
+def write_healthy_sample(root: Path, sample_id: str = "steady") -> Path:
+    """A reviewed sample for a healthy project: a diagnosis and a note, with no report."""
+    folder = write_sample(root, sample_id, diagnosis_json=json.dumps(healthy_diagnosis()))
+    (folder / "draft.json").unlink()
+    (folder / "final.json").unlink()
+    return folder
+
+
+def healthy_diagnosis() -> dict[str, Any]:
+    return diagnosis_data() | {"classification": "healthy", "things_to_watch": ["Vendor SLA"]}
+
+
+def test_healthy_sample_loads_without_a_report(tmp_path: Path) -> None:
+    write_healthy_sample(tmp_path)
+
+    sample = load_sample(tmp_path, "steady")
+
+    assert (sample.draft, sample.final) == (None, None)
+    assert sample.diagnosis.things_to_watch == ["Vendor SLA"]
+    assert list_sample_ids(tmp_path) == ["steady"]
+
+
+def test_healthy_sample_needs_only_the_note_to_be_reviewed(tmp_path: Path) -> None:
+    folder = write_healthy_sample(tmp_path)
+    (folder / "changes.md").unlink()
+
+    assert list_sample_ids(tmp_path) == []
+    assert list_samples_in_review(tmp_path) == ["steady"]
+
+
+def test_engine_has_no_draft_for_a_healthy_sample(tmp_path: Path) -> None:
+    write_healthy_sample(tmp_path)
+    sample = load_sample(tmp_path, "steady")
+
+    with pytest.raises(LookupError, match="steady"):
+        SampleEngine(sample).generate(sample.scenario, sample.diagnosis)
+
+
+def test_healthy_sample_with_a_report_is_a_format_error(tmp_path: Path) -> None:
+    write_sample(tmp_path, diagnosis_json=json.dumps(healthy_diagnosis()))
+
+    with pytest.raises(SampleFormatError, match="exactly when its project is troubled"):
+        load_sample(tmp_path, "vendor")
+
+
+def test_troubled_sample_without_a_report_is_a_format_error(tmp_path: Path) -> None:
+    folder = write_sample(tmp_path)
+    (folder / "draft.json").unlink()
+    (folder / "final.json").unlink()
+
+    with pytest.raises(SampleFormatError, match="exactly when its project is troubled"):
+        load_sample(tmp_path, "vendor")

@@ -19,6 +19,7 @@ from troubleshooter.ui.report_view import (
     render_downloads,
     render_report,
     render_report_header,
+    render_short_result,
     render_under_the_hood,
 )
 
@@ -67,9 +68,15 @@ elif requested in samples:
 
 shown = state.shown_sample()
 report = state.shown_report()
-if shown is not None and report is not None:
+if shown is not None:
     st.divider()
     render_report_header(shown)
+if shown is not None and (report is None or shown.draft is None):
+    # A project that needed no full report, such as a healthy one, gets a short result.
+    render_short_result(shown)
+    render_under_the_hood(None, shown.diagnosis, shown.run)
+    st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))
+elif shown is not None and report is not None and shown.draft is not None:
     view = st.segmented_control(
         t("view.label"),
         ["final", "compare"],
@@ -81,7 +88,7 @@ if shown is not None and report is not None:
     # The final version, with the visitor's edits, is the main report and the only one they
     # can edit; the AI draft is there to compare.
     if view == "compare":
-        render_comparison(shown, report)
+        render_comparison(shown, shown.draft, report)
     else:
         # Edits are kept only in this session, never on disk, so say so before any editor.
         st.warning(t("edit.refresh_warning"))

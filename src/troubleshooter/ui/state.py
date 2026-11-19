@@ -243,7 +243,10 @@ def shown_sample() -> Sample | None:
 
 
 def shown_report() -> Report | None:
-    """Return the final version with the visitor's edits, or None before the first Analyze."""
+    """Return the final version with the visitor's edits.
+
+    Returns None before the first Analyze, and for a sample whose project got no report.
+    """
     sample = shown_sample()
     if sample is None:
         return None
@@ -272,8 +275,8 @@ def save_health_override(dimension: Dimension, label: HealthLabel, note: str | N
 def _editable() -> tuple[Report, Report]:
     sample = shown_sample()
     current = shown_report()
-    if sample is None or current is None:
-        raise LookupError("There is no sample shown to edit")
+    if sample is None or sample.final is None or current is None:
+        raise LookupError("There is no sample report shown to edit")
     return sample.final, current
 
 
