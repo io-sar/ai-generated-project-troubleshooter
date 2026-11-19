@@ -168,7 +168,8 @@ src/troubleshooter/
     errors.py               # provider errors -> friendly, sanitized messages
   prompts/                  # diagnose.v1.md, generate.v1.md, repair.v1.md, regenerate.v1.md
   samples/                  # <id>/scenario.yaml, diagnosis.json, draft.json,
-                            # final.json, changes.md
+                            # final.json, changes.md, run.json (model and prompt
+                            # versions); in review until final.json and changes.md exist
   export/                   # renderer.py + templates/report.md.j2, report.html.j2
   i18n/                     # en.yaml, el.yaml, t()
   ui/

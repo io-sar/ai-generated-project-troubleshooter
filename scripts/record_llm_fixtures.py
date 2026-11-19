@@ -12,13 +12,13 @@ import argparse
 import json
 import logging
 import sys
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import anthropic
 import httpx2
+from local_secrets import contains_key, read_key
 from pydantic import BaseModel
 
 from troubleshooter import config
@@ -29,7 +29,6 @@ from troubleshooter.llm.errors import InvalidOutputError, LLMError
 from troubleshooter.llm.logs import quiet_sdk_loggers
 
 ROOT = Path(__file__).parents[1]
-SECRETS = ROOT / ".streamlit" / "secrets.toml"
 OUT_DIR = ROOT / "tests" / "llm" / "fixtures" / "anthropic"
 PROMPT = ROOT / "tests" / "llm" / "fixtures" / "recording_prompt.md"
 SAMPLE_ID = "placeholder"
@@ -58,7 +57,7 @@ class RecordingTransport(httpx2.BaseTransport):
 def fixture_text(case: str, model: str, status: int, body: Any, keys: list[str]) -> str:
     """Return the fixture file's text, or stop if any key appears in it."""
     text = json.dumps({"case": case, "model": model, "status": status, "body": body}, indent=2)
-    if any(key in text for key in keys):
+    if contains_key(text, keys):
         raise SystemExit(f"Stopped: the response for {case} contains a key")
     return text + "\n"
 
@@ -121,7 +120,7 @@ def main() -> int:
 
     sample = load_sample(config.SAMPLES_DIR, SAMPLE_ID)
     run = Recording(
-        key=_read_key(),
+        key=read_key(),
         system=PROMPT.read_text(encoding="utf-8"),
         user=f"<scenario>\n{sample.scenario.text}\n</scenario>",
     )
@@ -134,14 +133,6 @@ def main() -> int:
     run.record("invalid-key", default, Diagnosis, config.DIAGNOSE_MAX_TOKENS, key=INVALID_KEY)
     run.record("unknown-model", UNKNOWN_MODEL, Diagnosis, config.DIAGNOSE_MAX_TOKENS)
     return 0
-
-
-def _read_key() -> str:
-    with SECRETS.open("rb") as file:
-        key = tomllib.load(file).get("ANTHROPIC_API_KEY", "")
-    if not isinstance(key, str) or not key.strip():
-        raise SystemExit("ANTHROPIC_API_KEY is missing from the local secrets file")
-    return key
 
 
 if __name__ == "__main__":
