@@ -26,6 +26,7 @@ from troubleshooter.domain.models import Diagnosis, Report
 from troubleshooter.engines.sample_engine import load_sample
 from troubleshooter.llm.anthropic_client import AnthropicClient
 from troubleshooter.llm.errors import InvalidOutputError, LLMError
+from troubleshooter.llm.logs import quiet_sdk_loggers
 
 ROOT = Path(__file__).parents[1]
 SECRETS = ROOT / ".streamlit" / "secrets.toml"
@@ -116,6 +117,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    quiet_sdk_loggers()
 
     sample = load_sample(config.SAMPLES_DIR, SAMPLE_ID)
     run = Recording(
