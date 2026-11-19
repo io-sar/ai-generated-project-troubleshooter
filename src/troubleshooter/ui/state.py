@@ -8,6 +8,7 @@ item in that original, so putting a value back removes the marker. Only the fina
 ever edited; the AI draft stays as it was recorded.
 """
 
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -36,6 +37,9 @@ RISK_EDIT_FIELDS = (
     "signal_ids",
 )
 NEW_RISK_ID_PREFIX = "R"
+# The risk cells a visitor can type in. A row with all of them blank is empty and dropped;
+# the ID and signal links are read-only, so they don't count.
+RISK_VISITOR_FIELDS = ("description", "likelihood", "impact", "owner", "mitigation", "escalation")
 
 
 class EditRejected(ValueError):
@@ -75,20 +79,27 @@ def apply_risk_edits(
     Args:
         original: the sample's final version as recorded, used to decide what changed.
         current: the report with the visitor's earlier edits, whose other sections are kept.
-        rows: the editor's rows, in order. A row with no ID is new and gets the next free
-            ID; a row with no escalation gets the level its risk score suggests.
+        rows: the editor's rows, in order. A row whose visitor cells are all blank is empty
+            and dropped. A row with no ID is new and gets the next free ID; a row with no
+            escalation gets the level its risk score suggests.
 
     Returns:
         A new report with the edited register and changed rows marked.
 
     Raises:
-        EditRejected: a row has an invalid value or repeats another row's ID.
+        EditRejected: a row has an invalid value or repeats another row's ID. The row
+            number counts every row the visitor sees, empty ones included.
     """
     originals = {risk.id: risk for risk in original.risks}
-    ids = _risk_ids(rows)
+    kept = [
+        (number, row)
+        for number, row in enumerate(rows, start=1)
+        if not all(_is_blank(row.get(field)) for field in RISK_VISITOR_FIELDS)
+    ]
+    ids = _risk_ids(kept)
     risks = [
         _mark(_risk_from_row(row, risk_id, number, originals), originals.get(risk_id))
-        for number, (row, risk_id) in enumerate(zip(rows, ids, strict=True), start=1)
+        for (number, row), risk_id in zip(kept, ids, strict=True)
     ]
     return current.model_copy(update={"risks": risks})
 
@@ -97,14 +108,20 @@ def apply_raci_edits(original: Report, current: Report, rows: Sequence[RaciEdit]
     """Replace the RACI matrix with the visitor's rows.
 
     Rows are matched to the original by activity, so renaming an activity marks its row.
-    Rows that break the one-A rule are kept, because that rule is a warning.
+    Rows that break the one-A rule are kept, because that rule is a warning. A row with a
+    blank activity and no codes is empty and dropped.
 
     Raises:
-        EditRejected: a row has a blank activity or an unknown code.
+        EditRejected: a row has a blank activity or an unknown code. The row number counts
+            every row the visitor sees, empty ones included.
     """
     # Each original row matches one edited row at most, so a copied row counts as added.
     originals = {row.activity: row for row in reversed(original.raci)}
-    raci = [_raci_from_edit(edit, number, originals) for number, edit in enumerate(rows, start=1)]
+    raci = [
+        _raci_from_edit(edit, number, originals)
+        for number, edit in enumerate(rows, start=1)
+        if not (_is_blank(edit.activity) and all(_is_blank(code) for code in edit.codes.values()))
+    ]
     return current.model_copy(update={"raci": raci})
 
 
@@ -132,11 +149,20 @@ def override_health(
     return current.model_copy(update={"health": health})
 
 
-def _risk_ids(rows: Sequence[Mapping[str, Any]]) -> list[str]:
-    """Each row's ID, with new IDs for rows that have none."""
-    given = [str(row.get("id") or "").strip() for row in rows]
+def _is_blank(value: Any) -> bool:
+    """True for a cell the visitor left empty: None, blank text, or a number cell's NaN."""
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    return isinstance(value, float) and math.isnan(value)
+
+
+def _risk_ids(rows: Sequence[tuple[int, Mapping[str, Any]]]) -> list[str]:
+    """Each numbered row's ID, with new IDs for rows that have none."""
+    given = [str(row.get("id") or "").strip() for _, row in rows]
     seen: set[str] = set()
-    for number, risk_id in enumerate(given, start=1):
+    for (number, _), risk_id in zip(rows, given, strict=True):
         if risk_id in seen:
             raise EditRejected(number, "id")
         if risk_id:

@@ -13,6 +13,7 @@ from troubleshooter.engines.sample_engine import (
     SampleFormatError,
     SampleNotFoundError,
     list_sample_ids,
+    list_samples_in_review,
     load_sample,
 )
 
@@ -118,12 +119,71 @@ def test_path_like_ids_are_not_found(tmp_path: Path, sample_id: str) -> None:
         load_sample(tmp_path / "inner", sample_id)
 
 
-@pytest.mark.parametrize("missing", ["diagnosis.json", "draft.json", "final.json", "changes.md"])
-def test_missing_file_names_the_file(tmp_path: Path, missing: str) -> None:
+@pytest.mark.parametrize("missing", ["diagnosis.json", "draft.json"])
+def test_missing_recorded_file_names_the_file(tmp_path: Path, missing: str) -> None:
     folder = write_sample(tmp_path)
     (folder / missing).unlink()
 
     with pytest.raises(SampleFormatError, match=missing.replace(".", r"\.")):
+        load_sample(tmp_path, "vendor")
+
+
+@pytest.mark.parametrize("missing", [["final.json"], ["changes.md"], ["final.json", "changes.md"]])
+def test_sample_without_the_author_review_is_in_review(tmp_path: Path, missing: list[str]) -> None:
+    folder = write_sample(tmp_path, "recorded")
+    write_sample(tmp_path, "vendor")
+    for name in missing:
+        (folder / name).unlink()
+
+    assert list_sample_ids(tmp_path) == ["vendor"]
+    assert list_samples_in_review(tmp_path) == ["recorded"]
+    with pytest.raises(SampleNotFoundError):
+        load_sample(tmp_path, "recorded")
+
+
+def test_reviewed_sample_is_not_in_review(tmp_path: Path) -> None:
+    write_sample(tmp_path)
+
+    assert list_samples_in_review(tmp_path) == []
+
+
+def test_review_file_that_is_a_folder_does_not_count(tmp_path: Path) -> None:
+    folder = write_sample(tmp_path)
+    (folder / "changes.md").unlink()
+    (folder / "changes.md").mkdir()
+
+    assert list_sample_ids(tmp_path) == []
+
+
+def test_loads_how_a_recorded_sample_was_run(tmp_path: Path) -> None:
+    run = {
+        "provider": "anthropic",
+        "model": "claude-haiku-5-5",
+        "prompt_versions": {"diagnose": "v1", "generate": "v1"},
+        "recorded_on": "2026-11-19",
+    }
+    write_sample(tmp_path, run_json=json.dumps(run))
+
+    sample = load_sample(tmp_path, "vendor")
+
+    assert sample.run is not None
+    assert (sample.run.model, sample.run.prompt_versions["generate"]) == ("claude-haiku-5-5", "v1")
+    assert sample.run.recorded_on.isoformat() == "2026-11-19"
+
+
+def test_sample_without_a_run_file_has_no_run(tmp_path: Path) -> None:
+    write_sample(tmp_path)
+
+    assert load_sample(tmp_path, "vendor").run is None
+
+
+@pytest.mark.parametrize(
+    "run_json", ["not json", json.dumps({"provider": "anthropic"}), json.dumps([1])]
+)
+def test_broken_run_file_is_a_format_error(tmp_path: Path, run_json: str) -> None:
+    write_sample(tmp_path, run_json=run_json)
+
+    with pytest.raises(SampleFormatError):
         load_sample(tmp_path, "vendor")
 
 

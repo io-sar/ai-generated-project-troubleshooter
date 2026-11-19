@@ -6,6 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
+    "anthropic>=2.10.0",
     "jinja2>=3.1.6",
     "pydantic>=2.14.3",
     "pyyaml>=6.0.3",
@@ -43,7 +44,7 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "S", "RUF"]
 
 [tool.mypy]
 strict = true
-files = ["src", "tests", "app_pages", "streamlit_app.py"]
+files = ["src", "tests", "app_pages", "scripts", "streamlit_app.py"]
 # Type-checks Pydantic model constructors and flags writes to frozen models.
 plugins = ["pydantic.mypy"]
 
@@ -54,6 +55,20 @@ init_typed = true
 # Enforces the one-way module dependencies set out in CLAUDE.md. Run with: uv run lint-imports
 [tool.importlinter]
 root_package = "troubleshooter"
+# Lets contracts name third-party packages, such as the provider SDKs.
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "provider SDKs appear only in llm"
+type = "forbidden"
+source_modules = [
+    "troubleshooter.domain",
+    "troubleshooter.i18n",
+    "troubleshooter.engines",
+    "troubleshooter.export",
+    "troubleshooter.ui",
+]
+forbidden_modules = ["anthropic", "openai"]
 
 [[tool.importlinter.contracts]]
 name = "domain imports no other project package"

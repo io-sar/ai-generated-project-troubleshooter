@@ -6,4 +6,4 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Timeouts and retries
 - **Rule:** Every model call has a timeout from `config.py`. Only transient errors (timeouts, connection errors, 429, 5xx) are retried, in one layer only: the provider SDK, with an explicit `max_retries`. Auth and validation errors are never retried. The schema-repair retry is separate and happens once.
 - **Why:** Calls without timeouts hang the visitor's run, and retries in several layers multiply into many calls on the visitor's key.
-- **Status:** The timeout is Enforced and the retry rules are Adopting for new LLM code (M4).
+- **Status:** Enforced (M4). The SDK gets `LLM_TIMEOUT_SECONDS` and `LLM_MAX_RETRIES` from `config.py`; the engine never retries provider errors and makes its one repair call only for an invalid answer.

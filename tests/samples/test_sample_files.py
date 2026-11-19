@@ -6,7 +6,12 @@ from troubleshooter.config import SAMPLES_DIR
 from troubleshooter.domain.codes import ReportSource
 from troubleshooter.domain.models import Report, Sample
 from troubleshooter.domain.raci import rows_without_one_accountable
-from troubleshooter.engines.sample_engine import list_sample_ids, load_sample
+from troubleshooter.engines.sample_engine import (
+    RUN_FILE,
+    list_sample_ids,
+    list_samples_in_review,
+    load_sample,
+)
 
 SAMPLE_IDS = list_sample_ids(SAMPLES_DIR)
 
@@ -17,6 +22,14 @@ def reports(sample: Sample) -> dict[str, Report]:
 
 def test_at_least_one_sample_ships() -> None:
     assert SAMPLE_IDS
+
+
+def test_samples_in_review_hold_their_recorded_files() -> None:
+    # A folder is either a reviewed sample or a recording waiting for the author's review.
+    for sample_id in list_samples_in_review(SAMPLES_DIR):
+        folder = SAMPLES_DIR / sample_id
+        assert (folder / "diagnosis.json").is_file(), sample_id
+        assert (folder / RUN_FILE).is_file(), sample_id
 
 
 @pytest.mark.parametrize("sample_id", SAMPLE_IDS)

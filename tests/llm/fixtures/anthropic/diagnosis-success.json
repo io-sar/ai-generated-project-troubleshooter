@@ -1,0 +1,38 @@
+{
+  "case": "diagnosis-success",
+  "model": "claude-haiku-5-5",
+  "status": 200,
+  "body": {
+    "model": "claude-haiku-5-5",
+    "id": "msg_011ChCKuhuH8f6xDpAWQQ3ca",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"classification\":\"troubled\",\"summary\":\"CRM cutover to cloud is slipping and at risk on data quality, key-person knowledge, and training, with a fixed April shutdown target that conflicts with readiness.\",\"signals\":[{\"id\":\"S1\",\"observation\":\"Cutover date has already slipped twice from 1 March.\",\"evidence\":\"Cutover was planned for 1 March and has already moved twice.\"},{\"id\":\"S2\",\"observation\":\"Trial data load has a high failure rate on customer records.\",\"evidence\":\"A trial data load found that 12% of customer records fail validation, mostly duplicate contacts and missing country codes.\"},{\"id\":\"S3\",\"observation\":\"Only one person knows the old schema and is leaving soon.\",\"evidence\":\"The only database administrator who knows the old schema has handed in their notice and leaves in five weeks.\"},{\"id\":\"S4\",\"observation\":\"Agents are untrained with busy season approaching.\",\"evidence\":\"The support manager says agents haven't been trained yet and is worried about the busy season starting in May.\"},{\"id\":\"S5\",\"observation\":\"Sponsor's April shutdown deadline conflicts with the readiness status.\",\"evidence\":\"The sponsor still expects the old system to be switched off by the end of April to avoid another licence renewal.\"}],\"things_to_watch\":[\"Whether the DBA's schema knowledge is documented before they leave in five weeks.\",\"Duplicate and country-code fixes needed to bring the 12% failure rate down before the next load.\",\"Whether agent training can finish before May.\",\"Whether the sponsor will accept a later shutdown or a licence extension instead of the April deadline.\"]}"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 1107,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 528,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "diagnostics": null
+  }
+}

@@ -8,6 +8,7 @@ Unknown fields are rejected, so LLM output can't carry extra data past validatio
 Derived values (labels, overall rating, risk score) are calculated in `scoring`, not stored.
 """
 
+from datetime import date
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
@@ -22,15 +23,20 @@ from troubleshooter.domain.codes import (
 )
 
 SCENARIO_MAX_CHARS = 4000
+SCORE_MIN, SCORE_MAX = 0, 100
+RATING_MIN, RATING_MAX = 1, 5
 
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-Score = Annotated[int, Field(ge=0, le=100)]
-Rating = Annotated[int, Field(ge=1, le=5)]
+Score = Annotated[int, Field(ge=SCORE_MIN, le=SCORE_MAX)]
+Rating = Annotated[int, Field(ge=RATING_MIN, le=RATING_MAX)]
 
 # Human edits live on the report so the app and the export read one object (ADR 0005).
 # They are left out of the JSON Schema, so the LLM is never offered them.
 HumanAdjusted = SkipJsonSchema[bool]
 HumanNote = SkipJsonSchema[Text | None]
+# The schema hides these, but Pydantic still accepts them, so an LLM answer that sets any of
+# them is rejected before validation.
+HUMAN_FIELDS = frozenset({"human_adjusted", "note"})
 
 
 class DomainModel(BaseModel):
@@ -148,11 +154,24 @@ class Report(DomainModel):
     raci: list[RaciRow]
 
 
-# Not sent to an LLM, so this docstring is for developers.
+# Not sent to an LLM, so these docstrings are for developers.
+class RunInfo(DomainModel):
+    """How a sample was recorded: the model and prompt versions behind its diagnosis and draft.
+
+    `prompt_versions` maps each stage's prompt ID to its version, such as {"diagnose": "v1"}.
+    """
+
+    provider: Text
+    model: Text
+    prompt_versions: dict[Text, Text]
+    recorded_on: date
+
+
 class Sample(DomainModel):
     """A stored demo run: the scenario, the AI's diagnosis and draft, and the final version.
 
-    `changes` is the "What I changed" note, in Markdown.
+    `changes` is the "What I changed" note, in Markdown. `run` is missing for the
+    placeholder sample, which wasn't recorded from a model.
     """
 
     id: Text
@@ -163,6 +182,7 @@ class Sample(DomainModel):
     draft: Report
     final: Report
     changes: Text
+    run: RunInfo | None = None
 
     @field_validator("badge")
     @classmethod

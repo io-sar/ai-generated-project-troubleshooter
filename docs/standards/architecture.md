@@ -43,4 +43,4 @@ On-demand reference: not loaded automatically. The project's architecture rules 
 ## Anti-corruption layer for AI providers
 - **Rule:** Provider SDKs are used only in `llm/`, behind the `LLMClient` protocol. The rest of the code never sees a provider's types.
 - **Why:** Provider models change on someone else's schedule; one adapter contains the change.
-- **Status:** Documented in CLAUDE.md. An import-linter contract that forbids `anthropic` and `openai` outside `llm` is planned for M4.
+- **Status:** Enforced. An import-linter contract forbids `anthropic` and `openai` outside `llm`, and tests plant imports to prove it (M4).

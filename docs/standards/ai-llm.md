@@ -17,12 +17,12 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Cost, latency and token budgets
 - **Rule:** Each stage has a `max_tokens` limit and a timeout in `config.py`. Scenario text is capped at 4,000 characters.
 - **Why:** A visitor's key pays for each run, so the worst case should be known.
-- **Status:** The character cap is Enforced (`SCENARIO_MAX_CHARS`). Token limits and timeouts are Adopting for M4. The deployed app never uses the author's key. The author's own spend (recording samples, evals) is covered by asking before each paid run, and provider spending limits are planned for M4.
+- **Status:** Enforced. The character cap is `SCENARIO_MAX_CHARS`; the per-stage `max_tokens` limits and the call timeout are in `config.py` (M4). The deployed app never uses the author's key. The author's own spend (recording samples, evals) is covered by asking before each paid run, and by a monthly spend limit the author sets in the Claude Console.
 
 ## Pinned models and traceable outputs
 - **Rule:** Model IDs are exact snapshots in `config.py`, never `-latest` aliases. Each report records the prompt version and the model that produced it.
 - **Why:** Behaviour changes stay traceable and reproducible.
-- **Status:** Pinned snapshot IDs are Adopting. The prompt version is in the spec ("Under the hood"). Recording the model ID is planned for M4, and needs a spec change, so the author decides first.
+- **Status:** Model IDs are pinned in `config.py` and a test rejects `-latest` aliases (M4). Recorded samples keep their model and prompt versions in `run.json` (M4, #54); showing them in "Under the hood" is planned for M5, and Live reports follow in M6.
 
 ## Synchronous model calls
 - **Rule:** Calls run synchronously in the Streamlit run behind a progress display, each with a timeout.
@@ -33,10 +33,10 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Prompts as code
 - **Rule:** Prompts live in versioned Markdown files. Each starts with a header giving its ID, version, the models it was tuned for and its eval cases. Prompt changes go through pull requests.
 - **Why:** Prompts are product logic, and must be reviewable and traceable.
-- **Status:** Versioned files are documented in CLAUDE.md. The header is Adopting.
+- **Status:** Enforced. The loader refuses a prompt file without a header that matches its name, and fills rule numbers such as the health and escalation bands from `domain`, so a prompt can't disagree with ADR 0001 (M4).
 
 ## Structured outputs
-- **Rule:** Request structured output (Claude tool use, the OpenAI JSON-schema response format), validate it against the Pydantic schema, make one repair retry, then show a friendly error.
+- **Rule:** Request structured output (Claude structured outputs, the OpenAI JSON-schema response format), validate it against the Pydantic schema, make one repair retry, then show a friendly error.
 - **Why:** Schema validation turns vague failures into detectable, testable ones.
 - **Status:** Documented in SPEC section 8. Schema fit with both providers is enforced by `tests/llm/test_schema_fit.py`.
 

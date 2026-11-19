@@ -29,7 +29,7 @@ A free, public web app that shows how a troubled project can be assessed and rec
    - Draft and final appear side by side on desktop and stacked on phones.
    - The draft is read-only.
    - The report states how it addresses each key point of the scenario.
-3. As a visitor with an API key, I can switch to **Live AI mode**, choose **Claude or OpenAI**, pick a **project type** (software delivery, AI implementation, service migration, product launch), paste my own scenario and get an AI-generated analysis.
+3. As a visitor with an API key, I can switch to **Live AI mode**, choose a **Claude model**, pick a **project type** (software delivery, AI implementation, service migration, product launch), paste my own scenario and get an AI-generated analysis.
    - Free text is available only in Live mode, with a hard limit of 4,000 characters and a visible counter.
    - The key field is masked and the key lasts only for the session.
    - The report cites facts from the scenario.
@@ -64,7 +64,7 @@ A free, public web app that shows how a troubled project can be assessed and rec
 ## 4. MVP scope (v1)
 **Modes**
 - **Demo (default):** a selector with 5 fixed samples. The scenario text can't be edited, and no key is needed.
-- **Live AI:** free text, project type select, provider select, model select and a password-type key field.
+- **Live AI:** free text, project type select, model select and a password-type key field. Claude is the only provider in v1 (ADR 0006).
 
 **Samples** (English only; picked by ID; always show the recorded run, including in Live mode)
 1. Scope creep on a fixed budget
@@ -95,7 +95,7 @@ Each sample is a real recorded AI run, generated once by the author with a local
 - Markdown and standalone HTML (inline CSS, print stylesheet, browser Print → PDF) from Jinja2 templates. Each export includes a timestamp, the report's badge and per-item human-adjusted markers.
 
 **Live failure handling**
-- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response.
+- Each failure gets a specific message: invalid key, wrong provider's key, no credit, low rate limit, model not available, timeout, refusal, truncated response, provider unavailable (an outage or a lost connection), request rejected (the provider refused the app's request, which is a bug on the app's side), invalid answer (the answer still didn't fit the report format after one repair).
 - If stage 2 fails, the diagnosis is kept and a retry repeats only stage 2.
 
 **Visitor keys vary**
@@ -137,7 +137,7 @@ Each sample is a real recorded AI run, generated once by the author with a local
 | UI / hosting | **Streamlit** on Community Cloud | Gradio on HF Spaces; FastAPI + React on Vercel/Render | Free one-click deploy from GitHub and fast to build data tables and editors. Trade-off: less UI control, and full reruns need care with state. |
 | Language | **Python 3.12** | — | Native to Streamlit and both SDKs. |
 | Schemas | **Pydantic v2** | dataclasses, TypedDict | Validation, JSON Schema generation for structured LLM output, and one contract shared by all engines. |
-| LLM access | **Official `anthropic` + `openai` SDKs behind an `LLMClient` protocol** | LiteLLM; LangChain | Thin, explicit adapters show design skill and keep structured output reliable (Claude tool use / OpenAI JSON-schema response format). Trade-off: two adapters to maintain, and schemas must stay simple enough for both providers. |
+| LLM access | **Official `anthropic` SDK behind an `LLMClient` protocol** | LiteLLM; LangChain; a second provider (OpenAI) in v1 | A thin, explicit adapter shows design skill and keeps structured output reliable (Claude structured outputs). Current Claude models reject forced tool use, so the adapter doesn't use it. Claude is the only provider in v1, to keep development spend low (ADR 0006); another provider is one more adapter behind the same protocol. Trade-off: visitors with only an OpenAI key can't use Live mode. |
 | Prompts | **Versioned Markdown files** (`prompts/diagnose.v1.md`, …) | Inline strings; a prompt framework | Reviewable in GitHub and diffable; the version is recorded in the output. |
 | Templating/export | **Jinja2** → MD/HTML | WeasyPrint/fpdf2 PDF | No native dependencies, so deploys are reliable. |
 | i18n | **YAML string catalogs + `t()` helper** | gettext/Babel | Simple, and parity between languages is checkable in tests. Trade-off: no pluralization rules (not needed). |
@@ -162,14 +162,14 @@ src/troubleshooter/
     sample_engine.py        # returns recorded samples (AnalysisEngine only)
     llm_engine.py           # two-stage Live pipeline; also a SectionRegenerator
   llm/
-    base.py                 # LLMClient protocol: complete_structured(system, user, schema)
-    anthropic_client.py
-    openai_client.py
+    base.py                 # LLMClient protocol: complete_structured(system, user, schema, max_tokens)
+    anthropic_client.py     # the only provider in v1 (ADR 0006)
     factory.py              # provider + key -> client (never cached)
     errors.py               # provider errors -> friendly, sanitized messages
-  prompts/                  # diagnose.v1.md, generate.v1.md, regenerate.v1.md
+  prompts/                  # diagnose.v1.md, generate.v1.md, repair.v1.md, regenerate.v1.md
   samples/                  # <id>/scenario.yaml, diagnosis.json, draft.json,
-                            # final.json, changes.md
+                            # final.json, changes.md, run.json (model and prompt
+                            # versions); in review until final.json and changes.md exist
   export/                   # renderer.py + templates/report.md.j2, report.html.j2
   i18n/                     # en.yaml, el.yaml, t()
   ui/
@@ -204,11 +204,11 @@ The package is installed through `requirements.txt` so `src/` imports work on St
 - **Same report display in every mode:** every engine returns the same `Report` schema, so the report view and export don't branch on mode. Input controls and the regenerate action do differ.
 - **Two-stage LLM:** stage 1 returns a `Diagnosis`. Stage 2 generates the `Report` from scenario + diagnosis.
 - **Regeneration:** receives the scenario, diagnosis, current report and feedback. Human-adjusted rows are passed as fixed. Related sections are flagged, not changed.
-- **Structured output:** the JSON Schema is derived from the Pydantic models, kept within what both providers support. If validation fails, one repair retry is made, then a friendly error.
+- **Structured output:** the JSON Schema is derived from the Pydantic models, kept within what both Claude and OpenAI support, so adding a second provider later needs no schema change. If validation fails, one repair retry is made, then a friendly error.
 - **Explainability:** "Under the hood" shows signals, diagnosis and prompt version, so the reasoning is visible in the app.
 
 ## 9. Open items for implementation
-- The curated model list per provider (confirm at build time; configurable in `config.py`).
+- The curated model list. Decided in #15: the cheapest Claude model as the default, plus the mid-range and top models as alternatives, kept in `config.py`. The OpenAI half of #15 is deferred with OpenAI itself (ADR 0006).
 - Weights for the overall health rating, the fixed score behind each label, and the mapping from risk score to escalation level (documented in an ADR).
 - Scenario text and key points for the 5 samples, then recording and review.
 
@@ -230,9 +230,9 @@ The package is installed through `requirements.txt` so `src/` imports work on St
 - EN/EL catalog parity.
 
 **Manual, before each release**
-- Evals, run by the author on their own key: 3 runs per case per provider, with results committed under `evals/results/`.
+- Evals, run by the author on their own key: 3 runs per case on Claude, with results committed under `evals/results/`.
   - Schema validity and the one-A RACI rule must pass 100%.
   - Other rubric checks must pass at least 90%, including that each risk's `signal_ids` exist in the diagnosis.
-- A smoke test on each provider.
+- A smoke test on Claude, including a bad key and an OpenAI key.
 - A timing check of the sample path on the awake deployed app.
 - The author's review of the Greek UI text.

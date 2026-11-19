@@ -39,6 +39,7 @@ link("how.links.spec", repo_url("SPEC.md"))
 link("how.links.roadmap", repo_url("ROADMAP.md"))
 link("how.links.board", config.BOARD_URL)
 link("how.links.adrs", repo_url("docs/adr"))
+link("how.links.prompts", repo_url("src/troubleshooter/prompts"))
 
 st.subheader(t("how.checks_title"))
 st.write(t("how.checks_intro"))

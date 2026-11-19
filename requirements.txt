@@ -5,8 +5,12 @@ altair==6.3.0
     # via streamlit
 annotated-types==0.8.0
     # via pydantic
+anthropic==2.10.0
+    # via ai-project-troubleshooter
 anyio==4.16.0
     # via
+    #   anthropic
+    #   httpx2
     #   starlette
     #   streamlit
 attrs==26.1.0
@@ -21,11 +25,22 @@ click==8.5.1
     # via
     #   streamlit
     #   uvicorn
+docstring-parser==0.18.0
+    # via anthropic
 h11==0.16.0
-    # via uvicorn
+    # via
+    #   httpcore2
+    #   uvicorn
+httpcore2==2.16.2 ; sys_platform != 'emscripten'
+    # via httpx2
+httpx2==2.16.2
+    # via anthropic
+httpx2-jsfetch==1.0 ; sys_platform == 'emscripten'
+    # via httpx2
 idna==3.20
     # via
     #   anyio
+    #   httpx2
     #   requests
 itsdangerous==2.2.0
     # via streamlit
@@ -34,6 +49,8 @@ jinja2==3.1.6
     #   ai-project-troubleshooter
     #   altair
     #   pydeck
+jiter==0.19.0
+    # via anthropic
 jsonschema==4.26.0
     # via altair
 jsonschema-specifications==2025.9.1
@@ -47,6 +64,8 @@ numpy==2.5.4
     #   pandas
     #   pydeck
     #   streamlit
+opentelemetry-api==1.45.2
+    # via anthropic
 packaging==26.3
     # via
     #   altair
@@ -60,7 +79,9 @@ protobuf==7.36.2
 pyarrow==26.0.1
     # via streamlit
 pydantic==2.14.3
-    # via ai-project-troubleshooter
+    # via
+    #   ai-project-troubleshooter
+    #   anthropic
 pydantic-core==2.50.4
     # via pydantic
 pydeck==0.9.3
@@ -81,14 +102,22 @@ rpds-py==2026.9.1
     # via
     #   jsonschema
     #   referencing
+sniffio==1.3.1
+    # via anthropic
 starlette==1.10.0
     # via streamlit
 streamlit==1.67.0
     # via ai-project-troubleshooter
+truststore==0.10.5 ; sys_platform != 'emscripten'
+    # via
+    #   httpcore2
+    #   httpx2
 typing-extensions==4.16.0
     # via
     #   altair
+    #   anthropic
     #   anyio
+    #   opentelemetry-api
     #   pydantic
     #   pydantic-core
     #   streamlit

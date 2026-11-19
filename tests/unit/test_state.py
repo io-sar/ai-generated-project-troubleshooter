@@ -167,6 +167,80 @@ def test_duplicate_risk_id_is_rejected() -> None:
     assert (rejected.value.row, rejected.value.field) == (2, "id")
 
 
+EDITABLE_RISK_FIELDS = ("description", "likelihood", "impact", "owner", "mitigation", "escalation")
+
+
+def blank_risk_row(blank: Any) -> dict[str, Any]:
+    """An added row the visitor never filled in, with the editor's display-only cells."""
+    return {field: blank for field in EDITABLE_RISK_FIELDS} | {
+        "id": None,
+        "score": None,
+        "suggested": "",
+        "signals": "",
+        "edited": "",
+        "signal_ids": None,
+    }
+
+
+@pytest.mark.parametrize("blank", [None, "", "   ", float("nan")])
+def test_empty_added_risk_row_is_dropped(blank: Any) -> None:
+    original = original_report()
+
+    edited = apply_risk_edits(original, original, [*risk_rows(original), blank_risk_row(blank)])
+
+    assert edited == original
+
+
+def test_risk_row_with_every_editable_cell_cleared_is_dropped() -> None:
+    original = original_report()
+    rows = risk_rows(original)
+    rows[0] = rows[0] | {field: None for field in EDITABLE_RISK_FIELDS}
+
+    risks = apply_risk_edits(original, original, rows).risks
+
+    assert [(risk.id, risk.human_adjusted) for risk in risks] == [("R2", False)]
+
+
+def test_partly_filled_risk_row_is_still_validated() -> None:
+    original = original_report()
+    partial = blank_risk_row(None) | {"description": "Supplier may miss the date."}
+
+    with pytest.raises(EditRejected) as rejected:
+        apply_risk_edits(original, original, [*risk_rows(original), partial])
+
+    assert (rejected.value.row, rejected.value.field) == (3, "likelihood")
+
+
+def test_rejected_row_number_counts_the_dropped_empty_rows() -> None:
+    # The visitor sees the empty row in the table, so the numbering must include it.
+    original = original_report()
+    rows = risk_rows(original)
+    rows[1]["impact"] = 9
+
+    with pytest.raises(EditRejected) as rejected:
+        apply_risk_edits(original, original, [rows[0], blank_risk_row(None), rows[1]])
+
+    assert (rejected.value.row, rejected.value.field) == (3, "impact")
+
+
+def test_risk_table_of_only_empty_rows_ends_up_empty() -> None:
+    original = original_report()
+    rows = [blank_risk_row(None), blank_risk_row("")]
+
+    assert apply_risk_edits(original, original, rows).risks == []
+
+
+def test_empty_rows_do_not_use_up_new_ids() -> None:
+    original = original_report()
+    new = risk_data() | {"id": None}
+
+    risks = apply_risk_edits(
+        original, original, [*risk_rows(original), blank_risk_row(None), new]
+    ).risks
+
+    assert [risk.id for risk in risks] == ["R1", "R2", "R3"]
+
+
 def test_rejection_message_holds_no_report_text() -> None:
     # The message may reach logs, so it names the place only, never the visitor's text.
     original = original_report()
@@ -273,6 +347,37 @@ def test_invalid_raci_value_is_rejected_with_its_row_and_field(edit: RaciEdit, f
         apply_raci_edits(original, original, [*raci_edits(original), edit])
 
     assert (rejected.value.row, rejected.value.field) == (2, field)
+
+
+@pytest.mark.parametrize(
+    "empty",
+    [
+        RaciEdit(None, {"PM": None, "Vendor manager": None}),
+        RaciEdit("", {"PM": "", "Vendor manager": ""}),
+        RaciEdit("   ", {"PM": None, "Vendor manager": ""}),
+        RaciEdit(None, {}),
+    ],
+)
+def test_empty_raci_row_is_dropped(empty: RaciEdit) -> None:
+    original = original_report()
+
+    assert apply_raci_edits(original, original, [*raci_edits(original), empty]) == original
+
+
+def test_raci_row_with_codes_but_no_activity_is_still_rejected() -> None:
+    original = original_report()
+    rows = [*raci_edits(original), RaciEdit(None, {"PM": None}), RaciEdit(None, {"PM": "R"})]
+
+    with pytest.raises(EditRejected) as rejected:
+        apply_raci_edits(original, original, rows)
+
+    assert (rejected.value.row, rejected.value.field) == (3, "activity")
+
+
+def test_raci_table_of_only_empty_rows_ends_up_empty() -> None:
+    original = original_report()
+
+    assert apply_raci_edits(original, original, [RaciEdit(None, {"PM": None})]).raci == []
 
 
 # Health
