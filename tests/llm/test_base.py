@@ -19,7 +19,7 @@ class FakeClient:
 
 
 def test_provider_codes_are_stable() -> None:
-    assert [provider.value for provider in Provider] == ["anthropic", "openai"]
+    assert [provider.value for provider in Provider] == ["anthropic"]
 
 
 def test_every_provider_has_models_in_config_and_no_more() -> None:

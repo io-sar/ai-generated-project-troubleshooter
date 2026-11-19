@@ -13,10 +13,13 @@ SCANNED = [ROOT / "src", ROOT / "app_pages", ROOT / "scripts", ROOT / "streamlit
 ALL_MODEL_IDS = [model for choice in config.MODELS.values() for model in choice.all]
 
 
-def test_each_provider_offers_the_decided_models() -> None:
-    assert config.MODELS["anthropic"].default == "claude-haiku-5-5"
-    assert config.MODELS["openai"].default == "gpt-6-luna"
-    assert set(config.MODELS) == {"anthropic", "openai"}
+def test_claude_is_the_only_provider_with_the_decided_models() -> None:
+    assert set(config.MODELS) == {"anthropic"}
+    assert config.MODELS["anthropic"].all == (
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5",
+        "claude-opus-5-5",
+    )
 
 
 def test_all_lists_the_default_first() -> None:

@@ -24,14 +24,12 @@ class ModelChoice:
 
 
 # Curated list from decision #15. The cheapest model is the default because visitor keys are
-# paid keys, often with little credit. OpenAI publishes no dated snapshots for these models,
-# so their plain IDs are the most exact ones available.
+# paid keys, often with little credit. Claude is the only provider in v1 (ADR 0006).
 MODELS = {
     "anthropic": ModelChoice(
         default="claude-haiku-5-5",
         alternatives=("claude-sonnet-5-5", "claude-opus-5-5"),
     ),
-    "openai": ModelChoice(default="gpt-6-luna", alternatives=("gpt-6.2-sol",)),
 }
 
 # Timeout and retries are chosen together (ADR 0004): one call waits at most about

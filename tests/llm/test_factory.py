@@ -31,11 +31,7 @@ def test_empty_key_is_rejected(key: str) -> None:
         create_client(Provider.ANTHROPIC, key, config.MODELS["anthropic"].default)
 
 
-def test_model_from_another_provider_is_rejected() -> None:
+@pytest.mark.parametrize("model", ["gpt-6-luna", "claude-not-in-the-list", ""])
+def test_model_not_offered_is_rejected(model: str) -> None:
     with pytest.raises(ValueError, match="not offered"):
-        create_client(Provider.ANTHROPIC, KEY, config.MODELS["openai"].default)
-
-
-def test_openai_is_not_built_yet() -> None:
-    with pytest.raises(NotImplementedError):
-        create_client(Provider.OPENAI, "sk-proj-test", config.MODELS["openai"].default)
+        create_client(Provider.ANTHROPIC, KEY, model)

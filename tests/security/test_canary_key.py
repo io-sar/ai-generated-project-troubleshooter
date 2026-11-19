@@ -3,8 +3,8 @@
 Each case goes through the real factory and adapter. Only the network is replaced, by a
 mock transport, so the key travels the same path a visitor's key does.
 
-Covered so far: the factory and the Anthropic adapter. The OpenAI adapter (#51), the engine
-(#53) and session dumps (M6) join this file when they exist.
+Covered so far: the factory and the Anthropic adapter, the only provider in v1 (ADR 0006).
+The engine (#53) and session dumps (M6) join this file when they exist.
 """
 
 import logging

@@ -95,19 +95,19 @@ Sizes are relative: S is small, M is medium, L is large.
 ## M4 — AI pipeline
 **Goal:** the two-stage pipeline, working from a script with no UI.
 
-- `LLMClient` protocol, Anthropic and OpenAI adapters, and a factory that never caches clients.
+- `LLMClient` protocol, the Anthropic adapter, and a factory that never caches clients. Claude is the only provider in v1 (ADR 0006).
 - Prompts `diagnose.v1.md` and `generate.v1.md`, with untrusted input wrapped in delimiters.
 - Stage 1 input classification, stage 2 skipped when it doesn't apply, one repair retry.
 - Provider error mapping to sanitized messages.
 - `scripts/record_sample.py`.
 - Canary key test.
 
-**Decide first:** the curated model list per provider.
+**Decide first:** the curated model list (decided in #15).
 
 **Author task:** local key in the gitignored secrets file.
 
 **Done when**
-- A local script produces a valid report from each provider.
+- A local script produces a valid report from Claude.
 - Adapter and pipeline tests pass against saved real responses.
 - The canary key test and the no-cached-clients test pass.
 - Off-topic, thin and healthy inputs are classified correctly by hand on a few examples.
@@ -147,7 +147,7 @@ Sizes are relative: S is small, M is medium, L is large.
 **Done when**
 - `AppTest` with a fake client covers a full run, each failure message and regeneration.
 - Human-adjusted rows survive regeneration.
-- A manual smoke test passes on each provider, including a bad key and a wrong provider's key.
+- A manual smoke test passes on Claude, including a bad key and an OpenAI key.
 
 ## M7 — Greek UI
 **Goal:** full Greek interface.
@@ -161,7 +161,7 @@ Sizes are relative: S is small, M is medium, L is large.
 **Done when**
 - The catalog parity test passes.
 - `AppTest` covers the language switch.
-- Greek output validates on each provider.
+- Greek output validates on Claude.
 
 ## M8 — Evals, docs and polish
 **Goal:** finish the engineering evidence.
@@ -170,14 +170,14 @@ Sizes are relative: S is small, M is medium, L is large.
 - `docs/ARCHITECTURE.md`, `PROMPTS.md`, `BUILT_WITH_AI.md`, remaining ADRs.
 - Final "How this was built" page and README.
 
-**Decide first:** eval settings. SPEC section 10 has the current defaults (3 runs per case per provider, 100% on schema and RACI, 90% on the rest).
+**Decide first:** eval settings. SPEC section 10 has the current defaults (3 runs per case on Claude, 100% on schema and RACI, 90% on the rest).
 
 **Done when**
 - An eval pass meets the agreed thresholds.
 - The README checklist in the success criteria is met.
 
 ## Release v1.0
-- Smoke test on each provider.
+- Smoke test on Claude.
 - Timing check on the deployed app.
 - Final read of the Greek UI.
 - Tag and deploy from `main`.
@@ -189,4 +189,5 @@ Not planned yet, and left out of v1 on purpose:
 - File uploads, such as status reports and Jira exports.
 - Integrations with Jira, Slack and email.
 - Accounts and saved history.
+- OpenAI as a second provider: one more adapter behind the `LLMClient` protocol (ADR 0006).
 - Rule-based mode: a short questionnaire scored by the author's own delivery rules, for a report with no API key and no cost.

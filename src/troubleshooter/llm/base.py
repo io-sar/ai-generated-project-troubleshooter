@@ -5,10 +5,13 @@ from typing import Any, Protocol
 
 
 class Provider(StrEnum):
-    """The model providers the app supports. The codes are the keys of `config.MODELS`."""
+    """The model providers the app supports. The codes are the keys of `config.MODELS`.
+
+    Claude is the only provider in v1 (ADR 0006). Another provider is one more member here,
+    one adapter and one factory branch.
+    """
 
     ANTHROPIC = "anthropic"
-    OPENAI = "openai"
 
 
 class LLMClient(Protocol):

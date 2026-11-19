@@ -22,7 +22,6 @@ def create_client(provider: Provider, api_key: str, model: str) -> LLMClient:
 
     Raises:
         ValueError: The key is empty, or the model isn't offered for the provider.
-        NotImplementedError: The provider has no adapter yet.
     """
     if not api_key.strip():
         raise ValueError("The API key is empty")
@@ -36,6 +35,3 @@ def create_client(provider: Provider, api_key: str, model: str) -> LLMClient:
                 max_retries=config.LLM_MAX_RETRIES,
             )
             return AnthropicClient(sdk, model, config.LLM_EFFORT)
-        case Provider.OPENAI:
-            # TODO(#51): add the OpenAI adapter.
-            raise NotImplementedError("The OpenAI adapter isn't built yet")
