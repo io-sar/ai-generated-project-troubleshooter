@@ -1,0 +1,13 @@
+{
+  "case": "unknown-model",
+  "model": "claude-model-that-does-not-exist",
+  "status": 404,
+  "body": {
+    "type": "error",
+    "error": {
+      "type": "not_found_error",
+      "message": "model: claude-model-that-does-not-exist"
+    },
+    "request_id": "req_011ChCKwPs8cy4vdBkWSpgTR"
+  }
+}
