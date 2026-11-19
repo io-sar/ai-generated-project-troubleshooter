@@ -29,7 +29,7 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 - **Rule:** Never set `server.enableXsrfProtection` or `server.enableCORS` to `false`. Never render scenario text, feedback or model output with `unsafe_allow_html=True` or `st.html`.
 - **Why:** Streamlit Community Cloud controls the response headers, so CSP and HSTS can't be set by the app. These are the settings the app does control that could open a cross-site scripting or request-forgery hole.
 - **Decision:** Merged the general header rule with what the platform allows.
-- **Status:** Enforced.
+- **Status:** Enforced (`tests/security/test_web_settings.py`).
 
 ## Dependency hygiene
 - **Rule:** Pin dependencies with `uv.lock` and the exported `requirements.txt`. Scan for known vulnerabilities in CI, and automate update pull requests.
@@ -39,4 +39,4 @@ On-demand reference: not loaded automatically. The short rules Claude follows ar
 ## Threat modelling
 - **Rule:** Before Live mode handles visitor keys and free text, write a short threat model (STRIDE) covering key handling, prompt injection and the HTML export, and record the mitigations.
 - **Why:** Finding a design flaw on paper is far cheaper than in production.
-- **Status:** Planned for M4.
+- **Status:** Done in M5: [docs/threat-model.md](../threat-model.md). Its open items are issues in M6.
