@@ -32,6 +32,10 @@ MODELS = {
     ),
 }
 
+# Passed to the SDK explicitly, so an ANTHROPIC_BASE_URL variable on the host can never send
+# a visitor's key anywhere else.
+ANTHROPIC_BASE_URL = "https://api.anthropic.com"
+
 # Timeout and retries are chosen together (ADR 0004): one call waits at most about
 # LLM_TIMEOUT_SECONDS * (LLM_MAX_RETRIES + 1). The SDK is the only layer that retries.
 LLM_TIMEOUT_SECONDS = 120.0
