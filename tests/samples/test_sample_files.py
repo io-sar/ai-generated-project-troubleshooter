@@ -4,13 +4,14 @@ import pytest
 
 from troubleshooter.config import SAMPLES_DIR
 from troubleshooter.domain.codes import ReportSource
-from troubleshooter.domain.models import Report, Sample
+from troubleshooter.domain.models import Report, RunInfo, Sample
 from troubleshooter.domain.raci import rows_without_one_accountable
 from troubleshooter.engines.sample_engine import (
     RUN_FILE,
     list_sample_ids,
     list_samples_in_review,
     load_sample,
+    recording_problems,
 )
 
 SAMPLE_IDS = list_sample_ids(SAMPLES_DIR)
@@ -30,6 +31,17 @@ def test_samples_in_review_hold_their_recorded_files() -> None:
         folder = SAMPLES_DIR / sample_id
         assert (folder / "diagnosis.json").is_file(), sample_id
         assert (folder / RUN_FILE).is_file(), sample_id
+
+
+RECORDED = sorted(path.parent.name for path in SAMPLES_DIR.glob(f"*/{RUN_FILE}"))
+
+
+@pytest.mark.parametrize("sample_id", RECORDED)
+def test_recording_still_matches_its_prompts_and_model(sample_id: str) -> None:
+    # Covers samples in review too: their recording must stay traceable until reviewed.
+    run = RunInfo.model_validate_json((SAMPLES_DIR / sample_id / RUN_FILE).read_text("utf-8"))
+
+    assert recording_problems(run) == []
 
 
 @pytest.mark.parametrize("sample_id", SAMPLE_IDS)

@@ -159,11 +159,14 @@ class RunInfo(DomainModel):
     """How a sample was recorded: the model and prompt versions behind its diagnosis and draft.
 
     `prompt_versions` maps each stage's prompt ID to its version, such as {"diagnose": "v1"}.
+    `prompt_fingerprints` maps the same IDs to the SHA-256 of the prompt file used, so a
+    later edit to that file can be caught.
     """
 
     provider: Text
     model: Text
     prompt_versions: dict[Text, Text]
+    prompt_fingerprints: dict[Text, Text]
     recorded_on: date
 
 

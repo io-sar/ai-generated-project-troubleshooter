@@ -1,5 +1,6 @@
 import json
 import socket
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -7,7 +8,9 @@ import pytest
 import yaml
 
 from troubleshooter.domain.codes import ReportSource
+from troubleshooter.domain.models import RunInfo
 from troubleshooter.engines.base import AnalysisEngine
+from troubleshooter.engines.prompts import prompt_fingerprint
 from troubleshooter.engines.sample_engine import (
     SampleEngine,
     SampleFormatError,
@@ -15,6 +18,7 @@ from troubleshooter.engines.sample_engine import (
     list_sample_ids,
     list_samples_in_review,
     load_sample,
+    recording_problems,
 )
 
 from .report_data import diagnosis_data, report_data
@@ -160,6 +164,7 @@ def test_loads_how_a_recorded_sample_was_run(tmp_path: Path) -> None:
         "provider": "anthropic",
         "model": "claude-haiku-5-5",
         "prompt_versions": {"diagnose": "v1", "generate": "v1"},
+        "prompt_fingerprints": {"diagnose": "a" * 64, "generate": "b" * 64},
         "recorded_on": "2026-11-19",
     }
     write_sample(tmp_path, run_json=json.dumps(run))
@@ -242,3 +247,74 @@ def test_recorded_badge_loads(tmp_path: Path) -> None:
     write_sample(tmp_path, scenario_yaml=yaml.safe_dump(meta_data(badge="recorded")))
 
     assert load_sample(tmp_path, "vendor").badge is ReportSource.RECORDED
+
+
+# Recordings that no longer match the code
+
+
+def recorded_run(prompts_root: Path, model: str = "claude-haiku-5-5") -> RunInfo:
+    """A run recorded against the prompt files now in `prompts_root`."""
+    for prompt_id in ("diagnose", "generate"):
+        (prompts_root / f"{prompt_id}.v1.md").write_text(f"{prompt_id} prompt\n", "utf-8")
+    versions = {"diagnose": "v1", "generate": "v1"}
+    return RunInfo(
+        provider="anthropic",
+        model=model,
+        prompt_versions=versions,
+        prompt_fingerprints={
+            prompt_id: prompt_fingerprint(prompts_root, prompt_id, version)
+            for prompt_id, version in versions.items()
+        },
+        recorded_on=date(2026, 11, 19),
+    )
+
+
+def test_unchanged_recording_has_no_problems(tmp_path: Path) -> None:
+    assert recording_problems(recorded_run(tmp_path), tmp_path) == []
+
+
+def test_changed_prompt_file_says_to_add_a_new_version(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path)
+    (tmp_path / "generate.v1.md").write_text("generate prompt, edited\n", "utf-8")
+
+    assert recording_problems(run, tmp_path) == [
+        "generate.v1.md changed after this sample was recorded; "
+        "restore it and add a new version instead"
+    ]
+
+
+def test_missing_prompt_version_is_a_problem(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path)
+    (tmp_path / "diagnose.v1.md").unlink()
+
+    assert recording_problems(run, tmp_path) == [
+        "diagnose.v1.md is missing; recorded samples still use it"
+    ]
+
+
+def test_prompt_with_no_fingerprint_counts_as_changed(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path)
+    run = run.model_copy(
+        update={"prompt_fingerprints": {"diagnose": run.prompt_fingerprints["diagnose"]}}
+    )
+
+    assert recording_problems(run, tmp_path) == [
+        "generate.v1.md changed after this sample was recorded; "
+        "restore it and add a new version instead"
+    ]
+
+
+def test_model_no_longer_offered_is_a_problem(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path, model="claude-retired-1")
+
+    assert recording_problems(run, tmp_path) == [
+        "model claude-retired-1 is no longer offered for anthropic"
+    ]
+
+
+def test_unknown_provider_is_a_problem(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path).model_copy(update={"provider": "openai"})
+
+    assert recording_problems(run, tmp_path) == [
+        "model claude-haiku-5-5 is no longer offered for openai"
+    ]

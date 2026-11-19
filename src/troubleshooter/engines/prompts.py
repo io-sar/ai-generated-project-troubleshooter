@@ -9,6 +9,7 @@ are written in the files as `{{name}}` placeholders and filled from `domain` her
 prompt can never disagree with the rules the app applies.
 """
 
+import hashlib
 import re
 from dataclasses import fields
 from pathlib import Path
@@ -63,6 +64,22 @@ def load_prompt(root: Path, prompt_id: str, version: str) -> Prompt:
     ):
         raise PromptFileError(f"{path.name}: the header's id and version don't match its name")
     return Prompt(prompt_id, version, _fill(match["body"].strip(), path.name))
+
+
+def prompt_fingerprint(root: Path, prompt_id: str, version: str) -> str:
+    """Return the SHA-256 of a prompt file's text, as hex.
+
+    Line endings are normalised first, so a Windows checkout and CI agree.
+
+    Raises:
+        PromptFileError: the file is missing.
+    """
+    path = root / f"{prompt_id}.{version}.md"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise PromptFileError(f"No prompt file {path.name}") from None
+    return hashlib.sha256(text.replace("\r\n", "\n").encode("utf-8")).hexdigest()
 
 
 def rule_values() -> dict[str, int]:

@@ -16,7 +16,9 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from troubleshooter.domain.models import Diagnosis, Report, Sample, Scenario
+from troubleshooter import config
+from troubleshooter.domain.models import Diagnosis, Report, RunInfo, Sample, Scenario
+from troubleshooter.engines.prompts import PromptFileError, prompt_fingerprint
 
 _META_FILE = "scenario.yaml"
 # The author's files. Until both exist, a recorded sample is in review.
@@ -111,6 +113,38 @@ def load_sample(root: Path, sample_id: str) -> Sample:
         return Sample.model_validate(data)
     except ValidationError as error:
         raise SampleFormatError(f"Sample {sample_id!r} doesn't match the schema") from error
+
+
+def recording_problems(run: RunInfo, prompts_root: Path = config.PROMPTS_DIR) -> list[str]:
+    """Return what no longer matches the code a sample was recorded with.
+
+    A recorded sample stays traceable only while its prompt files are unchanged and its
+    model is still offered. A changed prompt needs a new version file, not an edit.
+
+    Args:
+        run: How the sample was recorded.
+        prompts_root: The folder that holds the prompt files.
+
+    Returns:
+        One message per problem; empty when the recording still matches.
+    """
+    problems = []
+    choice = config.MODELS.get(run.provider)
+    if choice is None or run.model not in choice.all:
+        problems.append(f"model {run.model} is no longer offered for {run.provider}")
+    for prompt_id, version in sorted(run.prompt_versions.items()):
+        name = f"{prompt_id}.{version}.md"
+        try:
+            fingerprint = prompt_fingerprint(prompts_root, prompt_id, version)
+        except PromptFileError:
+            problems.append(f"{name} is missing; recorded samples still use it")
+            continue
+        if fingerprint != run.prompt_fingerprints.get(prompt_id):
+            problems.append(
+                f"{name} changed after this sample was recorded; "
+                "restore it and add a new version instead"
+            )
+    return problems
 
 
 def _read(path: Path, parse: Callable[[str], Any]) -> Any:

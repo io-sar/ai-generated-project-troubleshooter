@@ -8,9 +8,11 @@ from types import ModuleType
 import pytest
 import yaml
 
+from troubleshooter import config
 from troubleshooter.domain.codes import InputClassification, ProjectType
 from troubleshooter.domain.models import Diagnosis, Report, RunInfo, Scenario
 from troubleshooter.engines.llm_engine import LLMEngine
+from troubleshooter.engines.prompts import prompt_fingerprint
 from troubleshooter.engines.sample_engine import (
     list_sample_ids,
     list_samples_in_review,
@@ -23,10 +25,15 @@ from .test_llm_engine import DIAGNOSIS, PROMPTS, REPORT, ScriptedClient
 
 KEY = "sk-ant-recording-key-0000"
 SCENARIO = Scenario(project_type=ProjectType.SERVICE_MIGRATION, text="Cutover slipped twice.")
+VERSIONS = {"diagnose": "v1", "generate": "v1", "repair": "v1"}
 RUN = RunInfo(
     provider="anthropic",
     model="claude-haiku-5-5",
-    prompt_versions={"diagnose": "v1", "generate": "v1", "repair": "v1"},
+    prompt_versions=VERSIONS,
+    prompt_fingerprints={
+        prompt_id: prompt_fingerprint(config.PROMPTS_DIR, prompt_id, version)
+        for prompt_id, version in VERSIONS.items()
+    },
     recorded_on=date(2026, 11, 19),
 )
 
@@ -76,6 +83,19 @@ def test_run_info_records_every_prompt_version(script: ModuleType) -> None:
     run = script.run_info(Provider.ANTHROPIC, "claude-haiku-5-5", PROMPTS, date(2026, 11, 19))
 
     assert run == RUN
+
+
+def test_run_info_fingerprints_the_files_it_was_given(script: ModuleType, tmp_path: Path) -> None:
+    for prompt_id, version in VERSIONS.items():
+        (tmp_path / f"{prompt_id}.{version}.md").write_text(f"{prompt_id} edited", "utf-8")
+
+    run = script.run_info(
+        Provider.ANTHROPIC, "claude-haiku-5-5", PROMPTS, RUN.recorded_on, tmp_path
+    )
+
+    assert run.prompt_versions == RUN.prompt_versions
+    assert run.prompt_fingerprints != RUN.prompt_fingerprints
+    assert len(set(run.prompt_fingerprints.values())) == len(VERSIONS)
 
 
 # The recorded files
