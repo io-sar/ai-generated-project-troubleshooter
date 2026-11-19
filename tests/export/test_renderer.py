@@ -16,6 +16,7 @@ from troubleshooter.config import SAMPLES_DIR
 from troubleshooter.domain.codes import Dimension, HealthLabel
 from troubleshooter.domain.models import Report, Sample
 from troubleshooter.engines.sample_engine import load_sample
+from troubleshooter.export.markdown import escape_markdown
 from troubleshooter.export.renderer import (
     ExportInput,
     TrustedMarkdown,
@@ -32,6 +33,7 @@ RENDERERS: dict[str, Renderer] = {"md": render_markdown, "html": render_html}
 
 
 def export_input(sample: Sample, *, with_note: bool = True) -> ExportInput:
+    assert sample.final is not None
     return ExportInput(
         report=sample.final,
         title=sample.title,
@@ -108,6 +110,7 @@ def test_export_files_end_with_one_newline_and_no_trailing_spaces(placeholder: S
 def edited_report(sample: Sample) -> Report:
     """The placeholder's final version after a fixed set of visitor edits."""
     original = sample.final
+    assert original is not None
     rows = [risk.model_dump(exclude={"human_adjusted"}) for risk in original.risks]
     rows[2]["impact"] = 5
     report = apply_risk_edits(original, original, rows)
@@ -170,3 +173,37 @@ def test_raci_row_without_one_accountable_is_flagged(placeholder: Sample, extens
     output = RENDERERS[extension](edited_input(placeholder))
 
     assert output.count(t("raci.needs_one_a")) == 1
+
+
+# Where the report covers each key point
+
+
+def test_each_key_point_shows_where_the_report_covers_it(placeholder: Sample) -> None:
+    sample = placeholder
+    where = tuple(f"R{n}" for n, _ in enumerate(sample.scenario.key_points, start=1))
+    data = dataclasses.replace(export_input(sample), covered_by=where)
+
+    markdown = render_markdown(data)
+    html = render_html(data)
+
+    for point, risk in zip(sample.scenario.key_points, where, strict=True):
+        covered = t("report.covered_by", where=risk)
+        assert f"- {escape_markdown(point)} {escape_markdown(f'({covered})')}\n" in markdown
+        assert f"<li>{point} <em>({covered})</em></li>" in html
+
+
+def test_covered_by_text_is_escaped(placeholder: Sample) -> None:
+    sample = placeholder
+    hostile = ("<script>alert(1)</script> [x](http://evil.example)",) * len(
+        sample.scenario.key_points
+    )
+    data = dataclasses.replace(export_input(sample), covered_by=hostile)
+
+    assert "<script>" not in render_html(data)
+    assert "[x](http://evil.example)" not in render_markdown(data)
+
+
+def test_key_points_without_coverage_show_no_covered_by_line(placeholder: Sample) -> None:
+    data = export_input(placeholder)
+
+    assert t("report.covered_by", where="") not in render_markdown(data)

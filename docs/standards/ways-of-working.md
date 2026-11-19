@@ -23,7 +23,7 @@ On-demand reference: not loaded automatically. The rules Claude follows are in C
 ## Tracker integration and automation
 - **Rule:** Issue templates live in the repo. The project board moves items automatically where GitHub allows it (for example, pull request opened → In review).
 - **Why:** Status stays accurate without manual updates.
-- **Status:** The issue templates are Enforced (`.github/ISSUE_TEMPLATE/`). Board automations are planned for M2 (an author action).
+- **Status:** The issue templates are Enforced (`.github/ISSUE_TEMPLATE/`). Board automations are planned for M8 (an author action).
 
 ## Tool selection with explicit criteria
 - **Rule:** Prefer free, open tools and free tiers on open standards. Compare cost, lock-in and licence for choices that are hard to reverse, and record them in an ADR.

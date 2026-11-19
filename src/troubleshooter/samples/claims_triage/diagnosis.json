@@ -1,0 +1,51 @@
+{
+  "classification": "troubled",
+  "summary": "The triage model is performing above its 85% target, but accuracy has fallen from 89% to 87% since a form change, and the two people who understand monthly retraining both leave before the end of December. The retraining scripts sit in a personal cloud workspace with only a six-page README from May, and the replacement engineer cannot start before late February. The model risk committee needs full documentation for sign-off on 20 January, so the pilot is at serious risk of stalling before scaling to all claims by March 2027.",
+  "signals": [
+    {
+      "id": "S1",
+      "observation": "The lead ML engineer, who knows the retraining process, is leaving the project before the January sign-off.",
+      "evidence": "The lead ML engineer resigned last week, and her last day is 18 December."
+    },
+    {
+      "id": "S2",
+      "observation": "The contractor who built the feature pipeline leaves at year end and cannot be extended under procurement rules.",
+      "evidence": "The data engineer who built the feature pipeline is a contractor whose contract ends on 31 December and cannot be extended under procurement rules."
+    },
+    {
+      "id": "S3",
+      "observation": "Monthly retraining depends on undocumented knowledge and scripts held in a personal workspace, known only to the two departing people.",
+      "evidence": "These two are the only people who know how the monthly retraining works. It runs from scripts in the lead engineer's personal cloud workspace, and the only documentation is a six-page README last updated in May."
+    },
+    {
+      "id": "S4",
+      "observation": "Model accuracy is declining, and the cause has been linked to a change in the claim form.",
+      "evidence": "Accuracy has dropped from 89% to 87% over two months, since a change to the online claim form."
+    },
+    {
+      "id": "S5",
+      "observation": "No replacement is in place, and the earliest realistic start is late February, after the sign-off date.",
+      "evidence": "The replacement role has been open three weeks with four applicants, and the earliest realistic start is late February."
+    },
+    {
+      "id": "S6",
+      "observation": "The risk committee sign-off requires full model documentation, which does not currently exist in usable form.",
+      "evidence": "The internal model risk committee's validation sign-off is scheduled for 20 January. The risk committee requires full model documentation before sign-off."
+    },
+    {
+      "id": "S7",
+      "observation": "The plan to scale to all claims by March 2027 depends on sign-off and a stable retraining process, both now at risk.",
+      "evidence": "The plan is to scale to all claims by the end of March 2027."
+    }
+  ],
+  "things_to_watch": [
+    "Whether the retraining scripts can be moved out of the personal cloud workspace and into controlled storage before 18 December.",
+    "Who will hold access and credentials to the scripts and data pipeline after the two leavers depart.",
+    "Whether a knowledge transfer or handover session can be scheduled before 31 December, and who will run it.",
+    "Whether the 20 January sign-off date can be kept if the documentation is not complete.",
+    "Cause of the accuracy drop from 89% to 87% and whether it continues to fall after the form change.",
+    "Whether the next monthly retraining run is due before the replacement starts and who will run it.",
+    "Options for interim contract or consultant cover, given the contractor cannot be extended.",
+    "The cost and timing of the scale-up from 15% to all claims, and whether the March 2027 date is still realistic."
+  ]
+}

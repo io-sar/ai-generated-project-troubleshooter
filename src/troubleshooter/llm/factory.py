@@ -16,8 +16,8 @@ def create_client(provider: Provider, api_key: str, model: str) -> LLMClient:
 
     Args:
         provider: Which provider the key and model belong to.
-        api_key: The key. Passing it explicitly stops the SDK from reading keys from
-            environment variables.
+        api_key: The key. Passing it, and the API address from `config.py`, explicitly stops
+            the SDK from reading either one from environment variables.
         model: A model ID offered for `provider` in `config.MODELS`.
 
     Raises:
@@ -31,6 +31,7 @@ def create_client(provider: Provider, api_key: str, model: str) -> LLMClient:
         case Provider.ANTHROPIC:
             sdk = anthropic.Anthropic(
                 api_key=api_key,
+                base_url=config.ANTHROPIC_BASE_URL,
                 timeout=config.LLM_TIMEOUT_SECONDS,
                 max_retries=config.LLM_MAX_RETRIES,
             )

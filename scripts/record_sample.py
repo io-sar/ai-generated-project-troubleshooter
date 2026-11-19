@@ -27,7 +27,7 @@ from troubleshooter.domain.codes import ReportSource
 from troubleshooter.domain.models import Diagnosis, Report, RunInfo, Scenario
 from troubleshooter.domain.triage import needs_report
 from troubleshooter.engines.llm_engine import LLMEngine, Prompts
-from troubleshooter.engines.prompts import load_prompts
+from troubleshooter.engines.prompts import load_prompts, prompt_fingerprint
 from troubleshooter.engines.sample_engine import RUN_FILE
 from troubleshooter.llm.base import Provider
 from troubleshooter.llm.factory import create_client
@@ -45,12 +45,26 @@ def record(engine: LLMEngine, scenario: Scenario) -> tuple[Diagnosis, Report | N
     return diagnosis, report
 
 
-def run_info(provider: Provider, model: str, prompts: Prompts, on: date) -> RunInfo:
-    """Describe the run: the provider, model and every prompt version the engine had."""
+def run_info(
+    provider: Provider, model: str, prompts: Prompts, on: date, root: Path = config.PROMPTS_DIR
+) -> RunInfo:
+    """Describe the run: the provider, model, and every prompt version the engine had.
+
+    Each prompt file's fingerprint is kept too, so a later edit to it can be caught.
+    """
     versions = {
         getattr(prompts, f.name).id: getattr(prompts, f.name).version for f in fields(prompts)
     }
-    return RunInfo(provider=provider.value, model=model, prompt_versions=versions, recorded_on=on)
+    return RunInfo(
+        provider=provider.value,
+        model=model,
+        prompt_versions=versions,
+        prompt_fingerprints={
+            prompt_id: prompt_fingerprint(root, prompt_id, version)
+            for prompt_id, version in versions.items()
+        },
+        recorded_on=on,
+    )
 
 
 def sample_files(diagnosis: Diagnosis, report: Report | None, run: RunInfo) -> dict[str, str]:

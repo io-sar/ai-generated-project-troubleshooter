@@ -1,0 +1,66 @@
+{
+  "classification": "troubled",
+  "summary": "The billing migration for 410,000 accounts went live with a rehearsal abandoned after an 11-hour data-load overrun, 14 open defects (two high), and a go decision on Sunday night. Since then the portal has had repeated outages, 4,200 customers were double-debited (€612,000), and call waits have reached 47 minutes. Rollback is no longer possible, and the 1 December billing run for 180,000 accounts and the vendor's exit on 30 November are both approaching.",
+  "signals": [
+    {
+      "id": "S1",
+      "observation": "Cutover rehearsal coverage was incomplete: only one of three planned rehearsals finished, and the second was abandoned partway.",
+      "evidence": "\"The plan called for three full cutover rehearsals. One was completed, and the second was abandoned halfway when the data load overran by 11 hours.\""
+    },
+    {
+      "id": "S2",
+      "observation": "The go decision was taken with known open defects, including high-severity ones.",
+      "evidence": "\"the go/no-go call approved the cutover with 14 open defects, two of them rated high.\""
+    },
+    {
+      "id": "S3",
+      "observation": "The customer portal failed for a full day and then repeatedly after go-live.",
+      "evidence": "\"The customer portal was down for nine hours on Monday. Three more outages of two to three hours followed during the week\""
+    },
+    {
+      "id": "S4",
+      "observation": "The outages have a known technical cause that is not yet fixed.",
+      "evidence": "\"traced to database connection limits under peak load.\""
+    },
+    {
+      "id": "S5",
+      "observation": "Customers were billed incorrectly on a large scale, with direct financial impact.",
+      "evidence": "\"4,200 customers were debited twice, a total of €612,000.\""
+    },
+    {
+      "id": "S6",
+      "observation": "Remediation depends on manual work that cannot keep up with the backlog.",
+      "evidence": "\"Refunds are being processed by hand at about 300 a day.\""
+    },
+    {
+      "id": "S7",
+      "observation": "Customer service capacity is badly strained.",
+      "evidence": "\"Call volume tripled to 14,000 calls a day, with average waits of 47 minutes.\""
+    },
+    {
+      "id": "S8",
+      "observation": "Rollback to the old system is no longer possible, removing the fallback option.",
+      "evidence": "\"Rollback is no longer possible because meter reads since Monday exist only in the new platform.\""
+    },
+    {
+      "id": "S9",
+      "observation": "A regulatory deadline and a large billing run are at risk.",
+      "evidence": "\"The energy regulator wants an incident report within ten working days\" and \"The next monthly billing run, for 180,000 accounts, is due on 1 December.\""
+    },
+    {
+      "id": "S10",
+      "observation": "Vendor support ends before the billing run and before stabilisation is likely to be complete.",
+      "evidence": "\"under the contract the vendor’s six-person hypercare team leaves on 30 November.\""
+    }
+  ],
+  "things_to_watch": [
+    "Exact date the regulator's ten-working-day deadline falls on and who owns the incident report",
+    "Current status and owner of the 14 open defects, especially the two high-severity ones",
+    "Whether the database connection limit fix is scheduled and tested before the 1 December run",
+    "Total refunds completed versus outstanding and the remaining duplicate-debit population",
+    "Plan and funding for handling the 1 December billing run for 180,000 accounts",
+    "Whether a post-30 November support arrangement with the vendor is possible",
+    "Named accountable executive and decision owner for further go/no-go or rollback-related calls",
+    "Whether meter read data since Monday has a validated backup or reconciliation route"
+  ]
+}

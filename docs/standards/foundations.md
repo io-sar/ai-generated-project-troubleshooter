@@ -16,7 +16,7 @@ On-demand reference: not loaded automatically. The project's rules for this topi
 ## Clean repository hygiene
 - **Rule:** Maintain `.gitignore` and `.editorconfig`. Never commit secrets, local env files, build output or generated files.
 - **Why:** Leaked secrets and noisy diffs are the most common avoidable incidents.
-- **Status:** Enforced for secrets and ignores (gitleaks, `.gitignore`). `.editorconfig` is planned for M2 (see docs/standards-adoption.md).
+- **Status:** Enforced for secrets and ignores (gitleaks, `.gitignore`). `.editorconfig` is planned for M8 (see docs/standards-adoption.md).
 
 ## Branching model follows the release model
 - **Rule:** Gitflow, because releases are scheduled (v0.1, v1.0) through `release/*` branches.

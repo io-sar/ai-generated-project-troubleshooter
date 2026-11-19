@@ -1,0 +1,377 @@
+{
+  "health": {
+    "schedule": {
+      "score": 20,
+      "rationale": "The processor API slipped from 30 September to a verbal 12 December. Six weeks of testing plus three to four weeks of scheme certification put the 15 January 2027 date out of reach on the stated figures (S1, S5)."
+    },
+    "scope": {
+      "score": 55,
+      "rationale": "The app is about 90% built, but eleven people are on secondary features while the launch path is blocked (S9). The remaining scope is not quantified, so the score stays in the problematic band."
+    },
+    "quality": {
+      "score": 45,
+      "rationale": "End-to-end card authorisation testing cannot start until the production API arrives (S5), so quality is unproven. The mostly built app keeps this above the at-risk band."
+    },
+    "risk_control": {
+      "score": 25,
+      "rationale": "There is no contract penalty for late delivery, the new date is verbal, and cancelling the campaign after 18 December costs 40% of the booking (S2, S4). No contingency is in place."
+    },
+    "stakeholder_confidence": {
+      "score": 30,
+      "rationale": "The public date and 2,300 waiting businesses raise the cost of a miss (S8). The board meets on 4 December, before the processor date, so it must decide on an unconfirmed date (S7)."
+    }
+  },
+  "risks": [
+    {
+      "id": "R1",
+      "description": "The processor misses its verbal 12 December production API date again, which blocks testing, certification and card printing.",
+      "likelihood": 5,
+      "impact": 5,
+      "owner": "Project manager",
+      "mitigation": "Get the date in writing with a named processor owner, and set a fallback date for the board. Ask the processor for a written recovery plan with dated milestones.",
+      "escalation": "steering",
+      "signal_ids": [
+        "S1",
+        "S2",
+        "S5",
+        "S6"
+      ]
+    },
+    {
+      "id": "R2",
+      "description": "The €180,000 campaign starts on 8 January before the launch is tested and certified, and cancelling after 18 December costs 40% of the booking.",
+      "likelihood": 4,
+      "impact": 4,
+      "owner": "Marketing lead",
+      "mitigation": "Ask the campaign provider for the exact penalty and any option to move the start date. Record the decision before 18 December.",
+      "escalation": "sponsor",
+      "signal_ids": [
+        "S4",
+        "S7"
+      ]
+    },
+    {
+      "id": "R3",
+      "description": "The €95,000 integration fee paid upfront is lost if the processor fails to deliver and the contract gives no remedy.",
+      "likelihood": 3,
+      "impact": 4,
+      "owner": "Finance lead",
+      "mitigation": "Seek a refund or credit against future work, and renegotiate the contract to tie payments to delivery milestones.",
+      "escalation": "sponsor",
+      "signal_ids": [
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "id": "R4",
+      "description": "The five-week card manufacturer lead time starts only when the final card range details arrive from the processor, so printing slips with the API.",
+      "likelihood": 4,
+      "impact": 4,
+      "owner": "Project manager",
+      "mitigation": "Ask the manufacturer whether it can print from provisional card range details, and agree the earliest print start in writing.",
+      "escalation": "sponsor",
+      "signal_ids": [
+        "S6"
+      ]
+    },
+    {
+      "id": "R5",
+      "description": "Testing and certification leave little or no slack before the public date, so any further delay pushes launch past 15 January 2027.",
+      "likelihood": 4,
+      "impact": 4,
+      "owner": "QA lead",
+      "mitigation": "Prepare the test plan and sandbox so testing starts on the day the production API arrives. Book the scheme certification slot as early as possible.",
+      "escalation": "sponsor",
+      "signal_ids": [
+        "S5",
+        "S7"
+      ]
+    },
+    {
+      "id": "R6",
+      "description": "Eleven people working on secondary features delay work on the launch bottleneck and leave the team unready for testing.",
+      "likelihood": 4,
+      "impact": 2,
+      "owner": "Engineering lead",
+      "mitigation": "Move the team to launch-critical work now, and pause secondary features that are not needed for launch.",
+      "escalation": "pm",
+      "signal_ids": [
+        "S9"
+      ]
+    }
+  ],
+  "recovery_plan": {
+    "stabilize": {
+      "goal": "Stop spending and lock in the processor date before the board meets and the 18 December campaign deadline.",
+      "actions": [
+        {
+          "description": "Obtain the 12 December API date in writing, naming a processor owner and the consequence of another slip.",
+          "owner": "Project manager",
+          "success_signal": "A written processor commitment is on file, or the board is told the date is still unconfirmed."
+        },
+        {
+          "description": "Move the eleven-person team from secondary features to launch-critical work and pause features not needed for launch.",
+          "owner": "Engineering lead",
+          "success_signal": "Timesheets show most effort on API readiness, test preparation and certification."
+        },
+        {
+          "description": "Get the exact cancellation penalty and any option to move the campaign start date.",
+          "owner": "Marketing lead",
+          "success_signal": "A written penalty figure and moved-date options are on file before 18 December."
+        }
+      ]
+    },
+    "recover": {
+      "goal": "Get the production API into testing and card production moving as soon as it arrives.",
+      "actions": [
+        {
+          "description": "Ask the card manufacturer whether it can start printing from provisional card range details.",
+          "owner": "Vendor lead",
+          "success_signal": "The manufacturer confirms in writing the earliest print start date."
+        },
+        {
+          "description": "Prepare the test plan and sandbox so authorisation testing starts on the day the production API arrives.",
+          "owner": "QA lead",
+          "success_signal": "The test plan is approved and test cases have run in the sandbox before the production API arrives."
+        },
+        {
+          "description": "Book the card scheme certification slot and confirm its lead time.",
+          "owner": "Compliance lead",
+          "success_signal": "The certification slot is confirmed in writing with its date."
+        }
+      ]
+    },
+    "sustain": {
+      "goal": "Lock in delivery protection and keep the plan visible so the problems do not come back.",
+      "actions": [
+        {
+          "description": "Renegotiate the processor contract to add delivery milestones and a remedy for late delivery.",
+          "owner": "Commercial lead",
+          "success_signal": "An amended contract is signed with dated milestones and a late-delivery remedy clause."
+        },
+        {
+          "description": "Seek a refund or credit for the €95,000 integration fee.",
+          "owner": "Finance lead",
+          "success_signal": "The processor replies in writing on the refund or credit against future work."
+        },
+        {
+          "description": "Run a weekly dated status review against the written milestones.",
+          "owner": "Project manager",
+          "success_signal": "The review log marks each milestone as met or missed, with a recovery action for each miss."
+        }
+      ]
+    }
+  },
+  "stakeholder_updates": {
+    "executive": "The board needs to decide on 4 December whether to move the 15 January 2027 public launch date and to change the campaign before 18 December. The processor date is verbal, and on the stated figures testing and certification end after 15 January.",
+    "delivery_team": "From now, secondary features pause and effort moves to API readiness, test preparation and certification. Raise blockers early in the daily check-in. No one is being blamed for the processor delay.",
+    "customer": "We are confirming a revised launch timing for the corporate expense card. Our card processor has a delivery date that we are verifying in writing. We will confirm the new launch date once it is secure, and we will tell you first if the timing changes again."
+  },
+  "decision_memo": {
+    "context": "The board meets on 4 December, before the processor's verbal 12 December API date. The campaign can be cancelled at a lower cost only until 18 December. On the stated figures, six weeks of testing and three to four weeks of certification put launch after 15 January 2027.",
+    "options": [
+      {
+        "title": "Hold the 15 January 2027 public launch",
+        "trade_offs": "Keeps the public date and the campaign, but on the stated figures testing and certification finish after 15 January, so the launch would rest on hope rather than evidence."
+      },
+      {
+        "title": "Move the public launch date and change the campaign before 18 December",
+        "trade_offs": "Gives a realistic window after the 12 December API date, six weeks of testing and three to four weeks of certification. It costs some reputational damage with the waitlist and may lose part of the campaign value."
+      },
+      {
+        "title": "Pause the launch until a second written processor date is confirmed",
+        "trade_offs": "Avoids committing to a date that is not yet secure, but delays all remaining work and the campaign decision cannot wait past 18 December."
+      }
+    ],
+    "recommendation": "Option 2. Set the new public date from the written processor date plus six weeks of testing and three to four weeks of certification, with a buffer the board agrees, and move or cut the campaign before 18 December. This is the only option consistent with the stated timeline. If the processor cannot confirm in writing, the board should still approve the move and treat the date as unconfirmed.",
+    "success_metrics": [
+      "A written processor API date is received before 18 December",
+      "The campaign decision is recorded before 18 December, with no cancellation penalty or a penalty below the 40% figure",
+      "The production API is delivered on the confirmed date",
+      "Authorisation testing finishes within six weeks of API delivery",
+      "Card scheme certification finishes within three to four weeks",
+      "The share of the 2,300 waitlist businesses still engaged at the new launch date is tracked monthly"
+    ]
+  },
+  "raci": [
+    {
+      "activity": "Confirm the processor API date in writing",
+      "assignments": [
+        {
+          "role": "Project manager",
+          "code": "A"
+        },
+        {
+          "role": "Vendor lead",
+          "code": "R"
+        },
+        {
+          "role": "Commercial lead",
+          "code": "C"
+        },
+        {
+          "role": "Sponsor",
+          "code": "I"
+        }
+      ]
+    },
+    {
+      "activity": "Move the team to launch-critical work",
+      "assignments": [
+        {
+          "role": "Project manager",
+          "code": "A"
+        },
+        {
+          "role": "Engineering lead",
+          "code": "R"
+        },
+        {
+          "role": "Sponsor",
+          "code": "I"
+        }
+      ]
+    },
+    {
+      "activity": "Decide and act on the marketing campaign",
+      "assignments": [
+        {
+          "role": "Sponsor",
+          "code": "A"
+        },
+        {
+          "role": "Marketing lead",
+          "code": "R"
+        },
+        {
+          "role": "Finance lead",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Obtain manufacturer print confirmation",
+      "assignments": [
+        {
+          "role": "Project manager",
+          "code": "A"
+        },
+        {
+          "role": "Vendor lead",
+          "code": "R"
+        },
+        {
+          "role": "Engineering lead",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Plan and run authorisation testing",
+      "assignments": [
+        {
+          "role": "QA lead",
+          "code": "A"
+        },
+        {
+          "role": "Engineering lead",
+          "code": "R"
+        },
+        {
+          "role": "Project manager",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Book and complete scheme certification",
+      "assignments": [
+        {
+          "role": "Project manager",
+          "code": "A"
+        },
+        {
+          "role": "Compliance lead",
+          "code": "R"
+        },
+        {
+          "role": "Vendor lead",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Renegotiate the processor contract",
+      "assignments": [
+        {
+          "role": "Sponsor",
+          "code": "A"
+        },
+        {
+          "role": "Commercial lead",
+          "code": "R"
+        },
+        {
+          "role": "Finance lead",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Recover the integration fee",
+      "assignments": [
+        {
+          "role": "Finance lead",
+          "code": "A"
+        },
+        {
+          "role": "Commercial lead",
+          "code": "R"
+        },
+        {
+          "role": "Vendor lead",
+          "code": "C"
+        }
+      ]
+    },
+    {
+      "activity": "Run the weekly dated status review",
+      "assignments": [
+        {
+          "role": "Project manager",
+          "code": "A"
+        },
+        {
+          "role": "Engineering lead",
+          "code": "C"
+        },
+        {
+          "role": "Sponsor",
+          "code": "I"
+        }
+      ]
+    },
+    {
+      "activity": "Take the launch date decision to the board",
+      "assignments": [
+        {
+          "role": "Sponsor",
+          "code": "A"
+        },
+        {
+          "role": "Project manager",
+          "code": "R"
+        },
+        {
+          "role": "Marketing lead",
+          "code": "C"
+        },
+        {
+          "role": "Finance lead",
+          "code": "C"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Scenario written by the author. scripts/record_sample.py adds the recorded files.
+title: "Claims triage model losing its builders"
+badge: recorded
+scenario:
+  project_type: ai_implementation
+  text: >-
+    An insurer has been piloting a machine learning model that sorts incoming motor claims
+    into fast track, standard handling or fraud review. Since June it has handled 15% of
+    claims, with 87% triage accuracy against an 85% target, and it has cut handling time by
+    22%. The plan is to scale to all claims by the end of March 2027. The internal model
+    risk committee’s validation sign-off is scheduled for 20 January.
+
+    The lead ML engineer resigned last week, and her last day is 18 December. The data
+    engineer who built the feature pipeline is a contractor whose contract ends on 31
+    December and cannot be extended under procurement rules. These two are the only people
+    who know how the monthly retraining works. It runs from scripts in the lead engineer’s
+    personal cloud workspace, and the only documentation is a six-page README last updated
+    in May. Accuracy has dropped from 89% to 87% over two months, since a change to the
+    online claim form. The replacement role has been open three weeks with four applicants,
+    and the earliest realistic start is late February. The risk committee requires full
+    model documentation before sign-off.
+  key_points:
+    - "Knowledge transfer in the next four weeks: document the pipeline and move it into a controlled environment"
+    - "Accuracy is drifting towards the 85% floor, so who monitors and retrains it during the gap?"
+    - "There is no one to maintain the model between January and late February"
+    - "The documentation is needed both for the 20 January sign-off and for continuity"
+    - "The full rollout in March depends on both of the above, so check whether it is still realistic"

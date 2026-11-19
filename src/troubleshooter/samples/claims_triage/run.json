@@ -1,0 +1,15 @@
+{
+  "provider": "anthropic",
+  "model": "claude-haiku-5-5",
+  "prompt_versions": {
+    "diagnose": "v1",
+    "generate": "v1",
+    "repair": "v1"
+  },
+  "prompt_fingerprints": {
+    "diagnose": "fd9c041d3c3d56b9f247974c41b888357df861b2645aa06ba6b9ea9b66ebb95d",
+    "generate": "5cd1af4a9565d8e9add87b968ef6067cdd06d896a2e20010d48afba85f3a8617",
+    "repair": "af325f9803641555f0d43051322aba3a590071f3f68d0db9b119ca0031f2f138"
+  },
+  "recorded_on": "2026-11-19"
+}

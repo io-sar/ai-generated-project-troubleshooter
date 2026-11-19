@@ -1,0 +1,13 @@
+{
+  "classification": "healthy",
+  "summary": "The rostering app project is on track against its plan: nine of eighteen sprints are done, spend is about half the €1.2 million budget, and velocity is steady at 30 to 34 points. The 6% scope growth was approved through change requests and funded from the contingency, and the union agreement, vendor support commitment and pilot readiness criteria are all in place. No material problems appear in the text.",
+  "signals": [],
+  "things_to_watch": [
+    "Whether the remaining contingency (about €82,000) is enough for further change requests before June",
+    "Closure plan and owner for the three open payroll integration defects before UAT starts on 5 January",
+    "Exit criteria and named owner for the pilot go/no-go decision on 2 February 2027",
+    "How the rollout to the remaining three hospitals after the pilot is sequenced and staffed",
+    "Cover arrangements for the developer on parental leave during mid-December to end of January",
+    "Test coverage and sign-off process for the 24 ward managers in UAT"
+  ]
+}

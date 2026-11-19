@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -7,7 +8,13 @@ from troubleshooter.domain import scoring
 from troubleshooter.domain.codes import EscalationLevel, ProjectType
 from troubleshooter.domain.models import Scenario
 from troubleshooter.engines.llm_engine import LLMEngine
-from troubleshooter.engines.prompts import PromptFileError, load_prompt, load_prompts, rule_values
+from troubleshooter.engines.prompts import (
+    PromptFileError,
+    load_prompt,
+    load_prompts,
+    prompt_fingerprint,
+    rule_values,
+)
 
 from .test_llm_engine import DIAGNOSIS, ScriptedClient
 
@@ -145,6 +152,37 @@ def test_loads_a_version_other_than_the_default(tmp_path: Path) -> None:
         "v2",
         "Version two, good from 70.",
     )
+
+
+# Fingerprints
+
+
+def test_fingerprint_is_the_sha256_of_the_file_text(tmp_path: Path) -> None:
+    (tmp_path / "diagnose.v1.md").write_bytes(b"Body.\n")
+
+    assert prompt_fingerprint(tmp_path, "diagnose", "v1") == hashlib.sha256(b"Body.\n").hexdigest()
+
+
+def test_fingerprint_ignores_line_endings(tmp_path: Path) -> None:
+    (tmp_path / "diagnose.v1.md").write_bytes(b"Line one\nLine two\n")
+    (tmp_path / "diagnose.v2.md").write_bytes(b"Line one\r\nLine two\r\n")
+
+    assert prompt_fingerprint(tmp_path, "diagnose", "v1") == prompt_fingerprint(
+        tmp_path, "diagnose", "v2"
+    )
+
+
+def test_fingerprint_changes_with_one_character(tmp_path: Path) -> None:
+    write_prompt(tmp_path, "diagnose", "v1", "Good from 70.")
+    before = prompt_fingerprint(tmp_path, "diagnose", "v1")
+    write_prompt(tmp_path, "diagnose", "v1", "Good from 71.")
+
+    assert prompt_fingerprint(tmp_path, "diagnose", "v1") != before
+
+
+def test_fingerprint_of_a_missing_file_fails_clearly(tmp_path: Path) -> None:
+    with pytest.raises(PromptFileError, match=r"No prompt file diagnose\.v9\.md"):
+        prompt_fingerprint(tmp_path, "diagnose", "v9")
 
 
 # End to end with the real prompts

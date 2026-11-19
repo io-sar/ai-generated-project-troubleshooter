@@ -15,6 +15,7 @@ from troubleshooter.domain.models import (
     DimensionHealth,
     Report,
     Risk,
+    Sample,
     Scenario,
 )
 
@@ -198,3 +199,51 @@ def test_scenario_accepts_text_at_the_limit() -> None:
 def test_scenario_rejects_text_over_the_limit() -> None:
     with pytest.raises(ValidationError, match="at most 4000 characters"):
         Scenario(project_type=ProjectType.PRODUCT_LAUNCH, text="x" * (SCENARIO_MAX_CHARS + 1))
+
+
+@pytest.mark.parametrize("missing", ["draft", "final"])
+def test_sample_has_both_draft_and_final_or_neither(missing: str) -> None:
+    data: dict[str, Any] = {
+        "id": "vendor",
+        "title": "Vendor slipping",
+        "badge": "recorded",
+        "scenario": {"project_type": "software_delivery", "text": "The vendor is late."},
+        "diagnosis": diagnosis_data(),
+        "draft": report_data(),
+        "final": report_data(),
+        "changes": "Note.",
+    }
+    Sample.model_validate(data)
+    del data[missing]
+
+    with pytest.raises(ValidationError, match="both a draft and a final version, or neither"):
+        Sample.model_validate(data)
+
+
+def sample_with_coverage(covered_by: list[str]) -> dict[str, Any]:
+    return {
+        "id": "vendor",
+        "title": "Vendor slipping",
+        "badge": "recorded",
+        "scenario": {
+            "project_type": "software_delivery",
+            "text": "The vendor is late.",
+            "key_points": ["Vendor slip", "No plan B"],
+        },
+        "diagnosis": diagnosis_data(),
+        "draft": report_data(),
+        "final": report_data(),
+        "changes": "Note.",
+        "covered_by": covered_by,
+    }
+
+
+@pytest.mark.parametrize("covered_by", [[], ["R1", "Sprint 1, action 2"]])
+def test_covered_by_is_empty_or_one_entry_per_key_point(covered_by: list[str]) -> None:
+    assert Sample.model_validate(sample_with_coverage(covered_by)).covered_by == covered_by
+
+
+@pytest.mark.parametrize("covered_by", [["R1"], ["R1", "R2", "R3"]])
+def test_covered_by_with_the_wrong_length_is_rejected(covered_by: list[str]) -> None:
+    with pytest.raises(ValidationError, match="one entry per key point"):
+        Sample.model_validate(sample_with_coverage(covered_by))

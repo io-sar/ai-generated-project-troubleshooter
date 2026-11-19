@@ -26,11 +26,13 @@ def link(label_key: str, url: str) -> None:
 
 
 def render_about_sidebar() -> None:
-    """Show who built the app, with links to their profile, the repo and the build story."""
+    """Show who built the app, with links to their profile and the repo.
+
+    The build story is in the page menu just above, so it isn't linked here again.
+    """
     with st.sidebar:
         st.subheader(t("about.title"))
         st.markdown(f"**{t('about.name')}**")
         st.caption(t("about.role"))
         link("about.linkedin", config.BUILDER_LINKEDIN_URL)
         link("about.repo", repo_url())
-        st.page_link(config.HOW_BUILT_PAGE, label=t("how.link"))

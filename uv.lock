@@ -12,7 +12,7 @@ resolution-markers = [
 
 [[package]]
 name = "ai-project-troubleshooter"
-version = "0.1.0.dev0"
+version = "0.1.0.dev4"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },

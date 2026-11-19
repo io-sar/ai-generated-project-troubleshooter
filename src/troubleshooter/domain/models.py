@@ -11,7 +11,14 @@ Derived values (labels, overall rating, risk score) are calculated in `scoring`,
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 from pydantic.json_schema import SkipJsonSchema
 
 from troubleshooter.domain.codes import (
@@ -159,11 +166,14 @@ class RunInfo(DomainModel):
     """How a sample was recorded: the model and prompt versions behind its diagnosis and draft.
 
     `prompt_versions` maps each stage's prompt ID to its version, such as {"diagnose": "v1"}.
+    `prompt_fingerprints` maps the same IDs to the SHA-256 of the prompt file used, so a
+    later edit to that file can be caught.
     """
 
     provider: Text
     model: Text
     prompt_versions: dict[Text, Text]
+    prompt_fingerprints: dict[Text, Text]
     recorded_on: date
 
 
@@ -171,7 +181,10 @@ class Sample(DomainModel):
     """A stored demo run: the scenario, the AI's diagnosis and draft, and the final version.
 
     `changes` is the "What I changed" note, in Markdown. `run` is missing for the
-    placeholder sample, which wasn't recorded from a model.
+    placeholder sample, which wasn't recorded from a model. `draft` and `final` are both
+    missing for a project that got no full report, such as a healthy one.
+    `covered_by` says where the final version covers each key point, in the same order
+    as `scenario.key_points`. The author writes it while reviewing the sample.
     """
 
     id: Text
@@ -179,10 +192,19 @@ class Sample(DomainModel):
     badge: ReportSource
     scenario: Scenario
     diagnosis: Diagnosis
-    draft: Report
-    final: Report
+    draft: Report | None = None
+    final: Report | None = None
     changes: Text
+    covered_by: list[Text] = []
     run: RunInfo | None = None
+
+    @model_validator(mode="after")
+    def _draft_and_final_come_together(self) -> Sample:
+        if (self.draft is None) != (self.final is None):
+            raise ValueError("a sample has both a draft and a final version, or neither")
+        if self.covered_by and len(self.covered_by) != len(self.scenario.key_points):
+            raise ValueError("covered_by needs one entry per key point, in the same order")
+        return self
 
     @field_validator("badge")
     @classmethod

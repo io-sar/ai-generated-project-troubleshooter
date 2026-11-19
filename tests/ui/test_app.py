@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from streamlit.testing.v1 import AppTest
 
 import troubleshooter
@@ -133,7 +134,9 @@ def test_health_label_override_shows_the_marker_and_recalculates() -> None:
 
 def test_health_note_appears_beside_the_ai_rationale() -> None:
     app = run_app(sample="placeholder")
-    rationale = load_sample(config.SAMPLES_DIR, "placeholder").final.health.quality.rationale
+    final = load_sample(config.SAMPLES_DIR, "placeholder").final
+    assert final is not None
+    rationale = final.health.quality.rationale
 
     override_health(app, "quality", "problematic", "QA *signed* off.")
 
@@ -323,9 +326,49 @@ def test_broken_sample_shows_a_friendly_error(sample_copy: Path) -> None:
     assert not shows_report(app)
 
 
+def test_key_points_show_where_the_report_covers_them(sample_copy: Path) -> None:
+    meta_path = sample_copy / "scenario.yaml"
+    meta = yaml.safe_load(meta_path.read_text(encoding="utf-8"))
+    where = [f"R{n}, Sprint 1" for n, _ in enumerate(meta["scenario"]["key_points"], start=1)]
+    meta["covered_by"] = where
+    meta_path.write_text(yaml.safe_dump(meta), encoding="utf-8")
+
+    app = run_app(sample="placeholder")
+
+    expected = "\n".join(
+        f"- {escape_markdown(point)} *({t('report.covered_by', where=escape_markdown(w))})*"
+        for point, w in zip(meta["scenario"]["key_points"], where, strict=True)
+    )
+    assert expected in markdown_text(app)
+
+
+def test_healthy_sample_shows_the_short_result(sample_copy: Path) -> None:
+    diagnosis = json.loads((sample_copy / "diagnosis.json").read_text(encoding="utf-8"))
+    diagnosis |= {"classification": "healthy", "things_to_watch": ["Vendor *SLA* review"]}
+    (sample_copy / "diagnosis.json").write_text(json.dumps(diagnosis), encoding="utf-8")
+    (sample_copy / "draft.json").unlink()
+    (sample_copy / "final.json").unlink()
+
+    app = run_app(sample="placeholder")
+
+    assert not app.exception
+    assert t("input_classification.healthy") in [element.value for element in app.subheader]
+    assert escape_markdown(diagnosis["summary"]) in markdown_text(app)
+    assert f"- {escape_markdown('Vendor *SLA* review')}" in markdown_text(app)
+    assert t("compare.changes") in [element.value for element in app.subheader]
+    # No report, so nothing to edit, compare or download, and no scores under the hood.
+    assert not app.segmented_control
+    assert not app.data_editor
+    assert not app.get("download_button")
+    assert len(app.expander[-1].dataframe) == 1
+    assert [link.label for link in app.main.page_link] == [t("how.link")]
+
+
 def test_stakeholder_updates_have_one_copyable_tab_each() -> None:
     app = run_app(sample="placeholder")
-    final = load_sample(config.SAMPLES_DIR, "placeholder").final.stakeholder_updates
+    report = load_sample(config.SAMPLES_DIR, "placeholder").final
+    assert report is not None
+    final = report.stakeholder_updates
 
     assert [tab.label for tab in app.tabs] == [
         t("updates.executive"),
@@ -461,6 +504,84 @@ def test_under_the_hood_shows_scores_signals_and_diagnosis() -> None:
     assert app.json[0].value
 
 
+def hood_text(app: AppTest) -> list[str]:
+    """The Markdown lines in Under the hood, which is the last expander."""
+    return [element.value for element in app.expander[-1].markdown]
+
+
+def test_under_the_hood_shows_how_a_recorded_sample_was_made(sample_copy: Path) -> None:
+    run = {
+        "provider": "anthropic",
+        "model": "claude-sonnet-5-5",
+        "prompt_versions": {"generate": "v2", "diagnose": "v1"},
+        "prompt_fingerprints": {"generate": "a" * 64, "diagnose": "b" * 64},
+        "recorded_on": "2026-11-20",
+    }
+    (sample_copy / "run.json").write_text(json.dumps(run), encoding="utf-8")
+
+    app = run_app(sample="placeholder")
+
+    assert hood_text(app)[1:4] == [
+        f"**{t('hood.model')}:** claude\\-sonnet\\-5\\-5",
+        f"**{t('hood.prompts')}:** "
+        + ", ".join(
+            [
+                t("hood.prompt_version", prompt="diagnose", version="v1"),
+                t("hood.prompt_version", prompt="generate", version="v2"),
+            ]
+        ),
+        f"**{t('hood.recorded')}:** 2026-11-20",
+    ]
+
+
+def write_run(folder: Path, model: str) -> None:
+    run = {
+        "provider": "anthropic",
+        "model": model,
+        "prompt_versions": {"diagnose": "v1"},
+        "prompt_fingerprints": {"diagnose": "a" * 64},
+        "recorded_on": "2026-11-20",
+    }
+    (folder / "run.json").write_text(json.dumps(run), encoding="utf-8")
+
+
+def captions(app: AppTest) -> list[str]:
+    return [element.value for element in app.caption]
+
+
+def test_sample_from_the_default_model_says_it_is_the_lowest_cost_one(
+    sample_copy: Path,
+) -> None:
+    default = config.MODELS["anthropic"].default
+    write_run(sample_copy, default)
+
+    app = run_app(sample="placeholder")
+
+    assert t("badge.default_model_note", model=escape_markdown(default)) in captions(app)
+
+
+@pytest.mark.parametrize("model", config.MODELS["anthropic"].alternatives)
+def test_sample_from_a_larger_model_has_no_model_note(sample_copy: Path, model: str) -> None:
+    write_run(sample_copy, model)
+
+    app = run_app(sample="placeholder")
+
+    assert not any("lowest-cost" in caption for caption in captions(app))
+
+
+def test_sample_not_recorded_has_no_model_note() -> None:
+    app = run_app(sample="placeholder")
+
+    assert not any("lowest-cost" in caption for caption in captions(app))
+
+
+def test_under_the_hood_shows_no_run_for_a_sample_not_recorded() -> None:
+    app = run_app(sample="placeholder")
+
+    labels = [t("hood.model"), t("hood.prompts"), t("hood.recorded")]
+    assert not [line for line in hood_text(app) if any(f"**{label}:**" in line for label in labels)]
+
+
 def compare_view() -> AppTest:
     app = run_app(sample="placeholder")
     app.segmented_control[0].set_value("compare").run()
@@ -552,16 +673,19 @@ def test_sidebar_shows_the_builder_and_their_links() -> None:
     assert app.sidebar.caption[0].value == t("about.role")
     assert f"[{t('about.linkedin')}]({config.BUILDER_LINKEDIN_URL})" in sidebar_text(app)
     assert f"[{t('about.repo')}]({config.REPO_URL})" in sidebar_text(app)
-    assert [link.label for link in app.sidebar.page_link] == [t("how.link")]
+    # The page menu already lists How this was built, so the sidebar doesn't repeat it.
+    assert not app.sidebar.page_link
 
 
-def test_results_screen_links_to_how_this_was_built() -> None:
+def test_results_screen_links_to_how_this_was_built_after_the_report() -> None:
     before = run_app()
     after = run_app(sample="placeholder")
 
     main_links = [link.label for link in after.main.page_link]
     assert main_links == [t("how.link")]
     assert not before.main.page_link
+    # The reader sees the whole report first; the build story comes last.
+    assert list(after.main)[-1] == after.main.page_link[0]
 
 
 def how_built_page() -> AppTest:

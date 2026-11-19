@@ -1,0 +1,28 @@
+# Scenario written by the author. scripts/record_sample.py adds the recorded files.
+title: "Permits portal growing past its budget"
+badge: recorded
+scenario:
+  project_type: software_delivery
+  text: >-
+    We are six months into building an online building-permits portal for a regional
+    government, on a fixed-price contract of €840,000. Go-live is fixed at 1 March 2027
+    because a new regulation ends paper submissions on that date. The contract has a penalty
+    of €4,000 per working day of delay. The signed scope had 46 user stories across new
+    permits, renovations and status tracking. Since July the client’s product owner has
+    added 19 stories through requests made in sprint reviews. They include payment
+    integration with the treasury system and a mobile document upload. None went through
+    change control and none were priced. Total scope has grown from 310 to 455 story points.
+    About 140 points are done, so 315 remain. After a slow start on design and
+    infrastructure, the team of seven now delivers about 28 points per two-week sprint, and
+    62% of the budget is spent.
+
+    The treasury integration needs a test environment the client promised for September. It
+    still does not exist. Two developers have worked over 50 hours a week for the last
+    month. Last week our account manager told the client’s director that delivery is on
+    track. The steering committee meets on 3 December.
+  key_points:
+    - "The numbers don’t close: about 7 sprints at 28 points cannot clear the 315 remaining points before 1 March"
+    - "19 unpriced stories with no change control, and the need to rebaseline scope with the client"
+    - "The missing treasury test environment is a client-side blocker on scope that was never agreed"
+    - "Overtime is not sustainable, and the “on track” message must be corrected before 3 December"
+    - "Weigh the penalty clause against a reduced MVP for the regulatory date"

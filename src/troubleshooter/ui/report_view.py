@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import streamlit as st
 
+from troubleshooter import config
 from troubleshooter.domain.codes import (
     Dimension,
     EscalationLevel,
@@ -25,6 +26,7 @@ from troubleshooter.domain.models import (
     RaciRow,
     Report,
     Risk,
+    RunInfo,
     Sample,
     Sprint,
     StakeholderUpdates,
@@ -42,6 +44,7 @@ from troubleshooter.export.markdown import escape_markdown as plain
 from troubleshooter.export.renderer import (
     ExportInput,
     TrustedMarkdown,
+    key_points_with_coverage,
     render_html,
     render_markdown,
 )
@@ -69,32 +72,71 @@ def render_badge(source: ReportSource) -> None:
     st.badge(t(f"badge.{source}"), color=_SOURCE_COLORS[source])
 
 
+def recorded_with_default_model(run: RunInfo) -> bool:
+    """Return True when the run used its provider's default model, which is the cheapest.
+
+    Samples recorded this way say so, so a reader knows the drafts come from the
+    lowest-cost model, chosen to keep the demo cheap to run.
+    """
+    choice = config.MODELS.get(run.provider)
+    return choice is not None and run.model == choice.default
+
+
 def render_report_header(sample: Sample) -> None:
     """Show the badge, the sample's title, its scenario and its key points."""
     render_badge(sample.badge)
+    if sample.run is not None and recorded_with_default_model(sample.run):
+        st.caption(t("badge.default_model_note", model=plain(sample.run.model)))
     st.header(sample.title, anchor=False)
     st.subheader(t("report.scenario"), anchor=False)
     st.text(sample.scenario.text)
     if sample.scenario.key_points:
         st.subheader(t("report.key_points"), anchor=False)
-        st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
+        pairs = key_points_with_coverage(sample.scenario.key_points, sample.covered_by)
+        st.markdown("\n".join(key_point_line(point, where) for point, where in pairs))
 
 
-def render_comparison(sample: Sample, final: Report) -> None:
+def key_point_line(point: str, where: str | None) -> str:
+    """Return one key point as a Markdown list item, with where the report covers it."""
+    line = f"- {plain(point)}"
+    return f"{line} *({t('report.covered_by', where=plain(where))})*" if where else line
+
+
+def render_changes(sample: Sample) -> None:
+    """Show the author's "What I changed" note."""
+    st.subheader(t("compare.changes"), anchor=False)
+    # The note is the author's own text from the repo, so Markdown is allowed; HTML never is.
+    st.markdown(sample.changes)
+
+
+def render_short_result(sample: Sample) -> None:
+    """Show the short result for a project that got no full report, such as a healthy one.
+
+    The diagnosis's summary and things to watch are the whole result, followed by the
+    author's note.
+    """
+    diagnosis = sample.diagnosis
+    st.subheader(t(f"input_classification.{diagnosis.classification}"), anchor=False)
+    st.markdown(plain(diagnosis.summary))
+    if diagnosis.things_to_watch:
+        st.markdown(f"**{t('short.things_to_watch')}**")
+        st.markdown("\n".join(f"- {plain(item)}" for item in diagnosis.things_to_watch))
+    render_changes(sample)
+
+
+def render_comparison(sample: Sample, draft: Report, final: Report) -> None:
     """Show the "What I changed" note, then the AI draft and the final version side by side.
 
     `final` is the final version with any of the visitor's edits, shown read-only here.
     Streamlit stacks the two columns on narrow screens, so phones read them one after
     the other.
     """
-    st.subheader(t("compare.changes"), anchor=False)
-    # The note is the author's own text from the repo, so Markdown is allowed; HTML never is.
-    st.markdown(sample.changes)
+    render_changes(sample)
     draft_column, final_column = st.columns(2)
     with draft_column:
         st.header(t("compare.draft"), anchor=False)
         # Read-only by design: the draft records what the AI produced.
-        render_report(sample.draft)
+        render_report(draft)
     with final_column:
         st.header(t("compare.final"), anchor=False)
         render_report(final)
@@ -250,23 +292,21 @@ def _apply_edits(save: Callable[[], None], column_label: Callable[[str], str]) -
     st.rerun()
 
 
-def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
-    """Show the numbers and data behind the report, for readers who want the detail."""
+def render_under_the_hood(
+    report: Report | None, diagnosis: Diagnosis, run: RunInfo | None = None
+) -> None:
+    """Show the numbers and data behind the result, for readers who want the detail.
+
+    `report` is None for a project that got no full report, so there are no scores.
+    `run` says how a recorded sample was made, so a reader can trace it to the model and
+    prompts. Samples that weren't recorded from a model, such as the placeholder, have none.
+    """
     with st.expander(t("hood.title")):
         st.markdown(f"**{t('hood.engine')}:** {t('hood.sample_engine')}")
-        scores = dimension_scores(report.health)
-        rows = [
-            {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
-            for dimension, score in scores.items()
-        ]
-        rows.append(
-            {
-                t("hood.dimension"): t("health.overall"),
-                t("hood.score"): overall_score(report.health),
-            }
-        )
-        st.markdown(f"**{t('hood.scores')}**")
-        st.dataframe(rows, hide_index=True)
+        if run is not None:
+            render_run(run)
+        if report is not None:
+            render_scores(report.health)
         st.markdown(f"**{t('hood.signals')}**")
         signals = [
             {
@@ -279,6 +319,28 @@ def render_under_the_hood(report: Report, diagnosis: Diagnosis) -> None:
         st.dataframe(signals, hide_index=True)
         st.markdown(f"**{t('hood.diagnosis')}**")
         st.json(diagnosis.model_dump(mode="json"), expanded=False)
+
+
+def render_scores(health: HealthScores) -> None:
+    """Show each dimension's score and the overall score as a table."""
+    rows = [
+        {t("hood.dimension"): t(f"dimension.{dimension}"), t("hood.score"): score}
+        for dimension, score in dimension_scores(health).items()
+    ]
+    rows.append({t("hood.dimension"): t("health.overall"), t("hood.score"): overall_score(health)})
+    st.markdown(f"**{t('hood.scores')}**")
+    st.dataframe(rows, hide_index=True)
+
+
+def render_run(run: RunInfo) -> None:
+    """Show the model, each prompt version and the date a sample was recorded."""
+    versions = ", ".join(
+        t("hood.prompt_version", prompt=plain(prompt_id), version=plain(version))
+        for prompt_id, version in sorted(run.prompt_versions.items())
+    )
+    st.markdown(f"**{t('hood.model')}:** {plain(run.model)}")
+    st.markdown(f"**{t('hood.prompts')}:** {versions}")
+    st.markdown(f"**{t('hood.recorded')}:** {run.recorded_on.strftime(t('hood.date_format'))}")
 
 
 def render_health(health: HealthScores, *, editable: bool = False) -> None:
@@ -465,6 +527,7 @@ def render_downloads(sample: Sample, report: Report, generated_at: datetime) -> 
         scenario=sample.scenario,
         generated_at=generated_at,
         changes=TrustedMarkdown(sample.changes),
+        covered_by=tuple(sample.covered_by),
     )
     markdown_column, html_column = st.columns(2)
     markdown_column.download_button(

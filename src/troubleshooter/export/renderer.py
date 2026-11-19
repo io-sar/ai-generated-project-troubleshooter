@@ -39,6 +39,8 @@ class ExportInput:
     generated_at: datetime
     # The "What I changed" note, for reports that have one.
     changes: TrustedMarkdown | None = None
+    # Where the report covers each key point, in key point order; empty if not given.
+    covered_by: tuple[str, ...] = ()
 
 
 def render_markdown(data: ExportInput) -> str:
@@ -101,6 +103,13 @@ _HTML_ENV = Environment(
 _HTML_ENV.globals["t"] = t
 
 
+def key_points_with_coverage(
+    points: list[str], covered_by: tuple[str, ...] | list[str]
+) -> list[tuple[str, str | None]]:
+    """Pair each key point with where the report covers it, or None if not given."""
+    return [(point, covered_by[n] if covered_by else None) for n, point in enumerate(points)]
+
+
 def _context(data: ExportInput) -> dict[str, Any]:
     report = data.report
     plan = report.recovery_plan
@@ -110,6 +119,7 @@ def _context(data: ExportInput) -> dict[str, Any]:
         "title": data.title,
         "source": data.source,
         "scenario": data.scenario,
+        "key_points": key_points_with_coverage(data.scenario.key_points, data.covered_by),
         "changes": data.changes,
         "generated": data.generated_at.astimezone(UTC).strftime(t("export.date_format")),
         "overall": overall_label(report.health),

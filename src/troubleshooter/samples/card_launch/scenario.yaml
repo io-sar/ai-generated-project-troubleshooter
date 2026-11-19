@@ -1,0 +1,26 @@
+# Scenario written by the author. scripts/record_sample.py adds the recorded files.
+title: "Card launch stuck on processor delays"
+badge: recorded
+scenario:
+  project_type: product_launch
+  text: >-
+    A fintech is launching a corporate expense card for small businesses, publicly announced
+    for 15 January 2027. There are 2,300 businesses on the waitlist. A €180,000 marketing
+    campaign is booked to start on 8 January, and cancelling it after 18 December costs 40%
+    of the booking. The card processor was due to deliver its production issuing API by 30
+    September. It has slipped twice and now says 12 December, but only verbally. The finance
+    team paid the processor’s €95,000 integration fee upfront, and the contract has no
+    penalty for late delivery.
+
+    The mobile app is about 90% built, but end-to-end testing of card authorisations cannot
+    start without the processor’s production API. We estimate six weeks for that testing,
+    then three to four weeks of card scheme certification. The card manufacturer needs the
+    final card range details from the processor before printing, with a five-week production
+    lead time. The team of eleven is working on secondary features to stay busy. The board
+    meets on 4 December and expects a launch decision.
+  key_points:
+    - "Even if 12 December holds, testing plus certification pushes launch to late February at the earliest, realistically March, so 15 January cannot be met"
+    - "Decide on the campaign before the 18 December cancellation deadline"
+    - "Get a written commitment from the processor and use the leverage that remains despite the upfront payment"
+    - "Give the board on 4 December a realistic replanned date and options"
+    - "Plan how to communicate with the 2,300 waitlisted businesses"

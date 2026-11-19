@@ -61,6 +61,7 @@ analyze:
 report:
   scenario: Scenario
   key_points: Key points
+  covered_by: "Covered by: {where}"
 
 view:
   label: Report view
@@ -151,6 +152,11 @@ hood:
   title: Under the hood
   engine: Engine
   sample_engine: Stored sample
+  model: Model
+  prompts: Prompt versions
+  prompt_version: "{prompt} {version}"
+  recorded: Recorded on
+  date_format: "%Y-%m-%d"
   scores: Health scores (0–100, higher is healthier)
   dimension: Dimension
   score: Score
@@ -159,6 +165,9 @@ hood:
   observation: Observation
   evidence: Evidence
   diagnosis: Diagnosis JSON
+
+short:
+  things_to_watch: Things to watch
 
 errors:
   sample_not_found: That sample doesn't exist. Pick one from the list below.
@@ -192,6 +201,10 @@ badge:
   recorded: Recorded AI run, reviewed by the author
   live: Live AI
   placeholder: Placeholder, not a real run
+  default_model_note: >-
+    Recorded with {model}, the app's default and lowest-cost model, to keep the demo's
+    running cost low. Larger models usually give stronger first drafts. The author's
+    corrections and notes are shown with each sample.
 
 input_classification:
   troubled: Troubled project

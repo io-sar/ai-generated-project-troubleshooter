@@ -5,7 +5,9 @@ A sample folder holds ``scenario.yaml`` (title, badge and scenario), ``diagnosis
 from a model. Loading reads local files only.
 
 A folder is "in review" until the author adds ``final.json`` and ``changes.md``: it has
-been recorded but not reviewed, so it isn't offered as a sample yet.
+been recorded but not reviewed, so it isn't offered as a sample yet. A project that got no
+full report, such as a healthy one, has no ``draft.json`` or ``final.json``, so it needs
+only ``changes.md``.
 """
 
 import json
@@ -16,11 +18,15 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from troubleshooter.domain.models import Diagnosis, Report, Sample, Scenario
+from troubleshooter import config
+from troubleshooter.domain.models import Diagnosis, Report, RunInfo, Sample, Scenario
+from troubleshooter.domain.triage import needs_report
+from troubleshooter.engines.prompts import PromptFileError, prompt_fingerprint
 
 _META_FILE = "scenario.yaml"
-# The author's files. Until both exist, a recorded sample is in review.
-REVIEW_FILES = ("final.json", "changes.md")
+DRAFT_FILE = "draft.json"
+FINAL_FILE = "final.json"
+CHANGES_FILE = "changes.md"
 RUN_FILE = "run.json"
 
 
@@ -48,7 +54,13 @@ class SampleEngine:
         return self._sample.diagnosis
 
     def generate(self, scenario: Scenario, diagnosis: Diagnosis) -> Report:
-        """Return the stored AI draft."""
+        """Return the stored AI draft.
+
+        Raises:
+            LookupError: the sample has no draft, because its project needed no report.
+        """
+        if self._sample.draft is None:
+            raise LookupError(f"Sample {self._sample.id!r} has no report")
         return self._sample.draft
 
 
@@ -75,7 +87,9 @@ def _sample_folders(root: Path) -> list[Path]:
 
 
 def _reviewed(folder: Path) -> bool:
-    return all((folder / name).is_file() for name in REVIEW_FILES)
+    # A recorded draft needs the author's final version; no draft means no report to correct.
+    has_final_if_needed = (folder / FINAL_FILE).is_file() or not (folder / DRAFT_FILE).exists()
+    return (folder / CHANGES_FILE).is_file() and has_final_if_needed
 
 
 def load_sample(root: Path, sample_id: str) -> Sample:
@@ -91,7 +105,8 @@ def load_sample(root: Path, sample_id: str) -> Sample:
 
     Raises:
         SampleNotFoundError: If no sample has this ID, or it is still in review.
-        SampleFormatError: If a file is missing, unreadable or fails validation.
+        SampleFormatError: If a file is missing, unreadable or fails validation, or the
+            sample has a report when its diagnosis needs none, or the other way round.
     """
     if sample_id not in list_sample_ids(root):
         raise SampleNotFoundError(f"No sample with ID {sample_id!r}")
@@ -101,16 +116,54 @@ def load_sample(root: Path, sample_id: str) -> Sample:
         **(meta if isinstance(meta, dict) else {}),
         "id": sample_id,
         "diagnosis": _read(folder / "diagnosis.json", json.loads),
-        "draft": _read(folder / "draft.json", json.loads),
-        "final": _read(folder / "final.json", json.loads),
-        "changes": _read(folder / "changes.md", str),
+        "changes": _read(folder / CHANGES_FILE, str),
     }
+    if (folder / FINAL_FILE).is_file():
+        data["draft"] = _read(folder / DRAFT_FILE, json.loads)
+        data["final"] = _read(folder / FINAL_FILE, json.loads)
     if (folder / RUN_FILE).is_file():
         data["run"] = _read(folder / RUN_FILE, json.loads)
     try:
-        return Sample.model_validate(data)
+        sample = Sample.model_validate(data)
     except ValidationError as error:
         raise SampleFormatError(f"Sample {sample_id!r} doesn't match the schema") from error
+    if (sample.final is not None) != needs_report(sample.diagnosis):
+        raise SampleFormatError(
+            f"Sample {sample_id!r} must have a report exactly when its project is troubled"
+        )
+    return sample
+
+
+def recording_problems(run: RunInfo, prompts_root: Path = config.PROMPTS_DIR) -> list[str]:
+    """Return what no longer matches the code a sample was recorded with.
+
+    A recorded sample stays traceable only while its prompt files are unchanged and its
+    model is still offered. A changed prompt needs a new version file, not an edit.
+
+    Args:
+        run: How the sample was recorded.
+        prompts_root: The folder that holds the prompt files.
+
+    Returns:
+        One message per problem; empty when the recording still matches.
+    """
+    problems = []
+    choice = config.MODELS.get(run.provider)
+    if choice is None or run.model not in choice.all:
+        problems.append(f"model {run.model} is no longer offered for {run.provider}")
+    for prompt_id, version in sorted(run.prompt_versions.items()):
+        name = f"{prompt_id}.{version}.md"
+        try:
+            fingerprint = prompt_fingerprint(prompts_root, prompt_id, version)
+        except PromptFileError:
+            problems.append(f"{name} is missing; recorded samples still use it")
+            continue
+        if fingerprint != run.prompt_fingerprints.get(prompt_id):
+            problems.append(
+                f"{name} changed after this sample was recorded; "
+                "restore it and add a new version instead"
+            )
+    return problems
 
 
 def _read(path: Path, parse: Callable[[str], Any]) -> Any:
