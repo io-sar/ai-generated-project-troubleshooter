@@ -517,6 +517,47 @@ def test_under_the_hood_shows_how_a_recorded_sample_was_made(sample_copy: Path) 
     ]
 
 
+def write_run(folder: Path, model: str) -> None:
+    run = {
+        "provider": "anthropic",
+        "model": model,
+        "prompt_versions": {"diagnose": "v1"},
+        "prompt_fingerprints": {"diagnose": "a" * 64},
+        "recorded_on": "2026-11-20",
+    }
+    (folder / "run.json").write_text(json.dumps(run), encoding="utf-8")
+
+
+def captions(app: AppTest) -> list[str]:
+    return [element.value for element in app.caption]
+
+
+def test_sample_from_the_default_model_says_it_is_the_lowest_cost_one(
+    sample_copy: Path,
+) -> None:
+    default = config.MODELS["anthropic"].default
+    write_run(sample_copy, default)
+
+    app = run_app(sample="placeholder")
+
+    assert t("badge.default_model_note", model=escape_markdown(default)) in captions(app)
+
+
+@pytest.mark.parametrize("model", config.MODELS["anthropic"].alternatives)
+def test_sample_from_a_larger_model_has_no_model_note(sample_copy: Path, model: str) -> None:
+    write_run(sample_copy, model)
+
+    app = run_app(sample="placeholder")
+
+    assert not any("lowest-cost" in caption for caption in captions(app))
+
+
+def test_sample_not_recorded_has_no_model_note() -> None:
+    app = run_app(sample="placeholder")
+
+    assert not any("lowest-cost" in caption for caption in captions(app))
+
+
 def test_under_the_hood_shows_no_run_for_a_sample_not_recorded() -> None:
     app = run_app(sample="placeholder")
 

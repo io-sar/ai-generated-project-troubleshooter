@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import streamlit as st
 
+from troubleshooter import config
 from troubleshooter.domain.codes import (
     Dimension,
     EscalationLevel,
@@ -70,9 +71,21 @@ def render_badge(source: ReportSource) -> None:
     st.badge(t(f"badge.{source}"), color=_SOURCE_COLORS[source])
 
 
+def recorded_with_default_model(run: RunInfo) -> bool:
+    """Return True when the run used its provider's default model, which is the cheapest.
+
+    Samples recorded this way say so, so a reader knows the drafts come from the
+    lowest-cost model, chosen to keep the demo cheap to run.
+    """
+    choice = config.MODELS.get(run.provider)
+    return choice is not None and run.model == choice.default
+
+
 def render_report_header(sample: Sample) -> None:
     """Show the badge, the sample's title, its scenario and its key points."""
     render_badge(sample.badge)
+    if sample.run is not None and recorded_with_default_model(sample.run):
+        st.caption(t("badge.default_model_note", model=plain(sample.run.model)))
     st.header(sample.title, anchor=False)
     st.subheader(t("report.scenario"), anchor=False)
     st.text(sample.scenario.text)

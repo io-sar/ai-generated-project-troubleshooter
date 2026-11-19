@@ -200,6 +200,10 @@ badge:
   recorded: Recorded AI run, reviewed by the author
   live: Live AI
   placeholder: Placeholder, not a real run
+  default_model_note: >-
+    Recorded with {model}, the app's default and lowest-cost model, to keep the demo's
+    running cost low. Larger models usually give stronger first drafts. The author's
+    corrections and notes are shown with each sample.
 
 input_classification:
   troubled: Troubled project
