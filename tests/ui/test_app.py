@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from streamlit.testing.v1 import AppTest
 
 import troubleshooter
@@ -323,6 +324,22 @@ def test_broken_sample_shows_a_friendly_error(sample_copy: Path) -> None:
     assert not app.exception
     assert app.error[0].value == t("errors.no_samples")
     assert not shows_report(app)
+
+
+def test_key_points_show_where_the_report_covers_them(sample_copy: Path) -> None:
+    meta_path = sample_copy / "scenario.yaml"
+    meta = yaml.safe_load(meta_path.read_text(encoding="utf-8"))
+    where = [f"R{n}, Sprint 1" for n, _ in enumerate(meta["scenario"]["key_points"], start=1)]
+    meta["covered_by"] = where
+    meta_path.write_text(yaml.safe_dump(meta), encoding="utf-8")
+
+    app = run_app(sample="placeholder")
+
+    expected = "\n".join(
+        f"- {escape_markdown(point)} *({t('report.covered_by', where=escape_markdown(w))})*"
+        for point, w in zip(meta["scenario"]["key_points"], where, strict=True)
+    )
+    assert expected in markdown_text(app)
 
 
 def test_healthy_sample_shows_the_short_result(sample_copy: Path) -> None:

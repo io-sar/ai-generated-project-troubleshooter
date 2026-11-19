@@ -44,6 +44,7 @@ from troubleshooter.export.markdown import escape_markdown as plain
 from troubleshooter.export.renderer import (
     ExportInput,
     TrustedMarkdown,
+    key_points_with_coverage,
     render_html,
     render_markdown,
 )
@@ -91,7 +92,14 @@ def render_report_header(sample: Sample) -> None:
     st.text(sample.scenario.text)
     if sample.scenario.key_points:
         st.subheader(t("report.key_points"), anchor=False)
-        st.markdown("\n".join(f"- {plain(point)}" for point in sample.scenario.key_points))
+        pairs = key_points_with_coverage(sample.scenario.key_points, sample.covered_by)
+        st.markdown("\n".join(key_point_line(point, where) for point, where in pairs))
+
+
+def key_point_line(point: str, where: str | None) -> str:
+    """Return one key point as a Markdown list item, with where the report covers it."""
+    line = f"- {plain(point)}"
+    return f"{line} *({t('report.covered_by', where=plain(where))})*" if where else line
 
 
 def render_changes(sample: Sample) -> None:
@@ -519,6 +527,7 @@ def render_downloads(sample: Sample, report: Report, generated_at: datetime) -> 
         scenario=sample.scenario,
         generated_at=generated_at,
         changes=TrustedMarkdown(sample.changes),
+        covered_by=tuple(sample.covered_by),
     )
     markdown_column, html_column = st.columns(2)
     markdown_column.download_button(

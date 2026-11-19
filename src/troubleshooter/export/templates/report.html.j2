@@ -39,8 +39,8 @@
 {% if scenario.key_points %}
 <h3>{{ t("report.key_points") }}</h3>
 <ul>
-{% for point in scenario.key_points %}
-  <li>{{ point }}</li>
+{% for point, where in key_points %}
+  <li>{{ point }}{% if where %} <em>({{ t("report.covered_by", where=where) }})</em>{% endif %}</li>
 {% endfor %}
 </ul>
 {% endif %}

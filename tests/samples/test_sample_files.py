@@ -89,5 +89,16 @@ def test_final_differs_from_draft(sample_id: str) -> None:
     assert not versions or versions["final"] != versions["draft"]
 
 
+@pytest.mark.parametrize("sample_id", SAMPLE_IDS)
+def test_recorded_sample_says_where_each_key_point_is_covered(sample_id: str) -> None:
+    # SPEC section 10: the report states how it addresses each key point.
+    sample = load_sample(SAMPLES_DIR, sample_id)
+    if sample.badge is not ReportSource.RECORDED:
+        pytest.skip("only recorded samples go through the review checklist")
+
+    assert len(sample.covered_by) == len(sample.scenario.key_points)
+    assert all(where.strip() for where in sample.covered_by)
+
+
 def test_placeholder_is_labelled_as_one() -> None:
     assert load_sample(SAMPLES_DIR, "placeholder").badge is ReportSource.PLACEHOLDER

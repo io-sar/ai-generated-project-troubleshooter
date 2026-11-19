@@ -183,6 +183,8 @@ class Sample(DomainModel):
     `changes` is the "What I changed" note, in Markdown. `run` is missing for the
     placeholder sample, which wasn't recorded from a model. `draft` and `final` are both
     missing for a project that got no full report, such as a healthy one.
+    `covered_by` says where the final version covers each key point, in the same order
+    as `scenario.key_points`. The author writes it while reviewing the sample.
     """
 
     id: Text
@@ -193,12 +195,15 @@ class Sample(DomainModel):
     draft: Report | None = None
     final: Report | None = None
     changes: Text
+    covered_by: list[Text] = []
     run: RunInfo | None = None
 
     @model_validator(mode="after")
     def _draft_and_final_come_together(self) -> Sample:
         if (self.draft is None) != (self.final is None):
             raise ValueError("a sample has both a draft and a final version, or neither")
+        if self.covered_by and len(self.covered_by) != len(self.scenario.key_points):
+            raise ValueError("covered_by needs one entry per key point, in the same order")
         return self
 
     @field_validator("badge")

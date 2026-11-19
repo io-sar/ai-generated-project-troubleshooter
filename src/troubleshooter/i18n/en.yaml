@@ -61,6 +61,7 @@ analyze:
 report:
   scenario: Scenario
   key_points: Key points
+  covered_by: "Covered by: {where}"
 
 view:
   label: Report view

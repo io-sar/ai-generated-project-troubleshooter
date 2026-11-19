@@ -12,8 +12,8 @@
 {% if scenario.key_points %}
 ### {{ t("report.key_points") }}
 
-{% for point in scenario.key_points %}
-- {{ point }}
+{% for point, where in key_points %}
+- {{ point }}{{ " (" ~ t("report.covered_by", where=where) ~ ")" if where else "" }}
 {% endfor %}
 
 {% endif %}
