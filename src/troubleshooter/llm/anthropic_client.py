@@ -17,6 +17,9 @@ PROVIDER = "anthropic"
 # Every Anthropic API key starts with this. A 401 for a key without it most likely means
 # the visitor pasted another provider's key.
 KEY_PREFIX = "sk-ant-"
+# A spend limit the key's owner set, or an empty balance, comes back as a plain 400 with no
+# error code, so its documented message text is the only signal.
+OUT_OF_CREDIT_MESSAGES = ("You have reached your specified", "credit balance is too low")
 
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
@@ -92,6 +95,13 @@ def _answer(message: Message) -> dict[str, Any]:
     return answer
 
 
+def _is_out_of_credit(error: anthropic.BadRequestError) -> bool:
+    body = error.body if isinstance(error.body, dict) else {}
+    details = body.get("error")
+    message = details.get("message") if isinstance(details, dict) else None
+    return isinstance(message, str) and any(text in message for text in OUT_OF_CREDIT_MESSAGES)
+
+
 def error_kind(error: anthropic.AnthropicError, api_key: str | None) -> LLMErrorKind:
     """Map an SDK error to the reason shown to the visitor.
 
@@ -121,6 +131,8 @@ def error_kind(error: anthropic.AnthropicError, api_key: str | None) -> LLMError
             return LLMErrorKind.TIMEOUT
         case anthropic.InternalServerError() | anthropic.APIConnectionError():
             return LLMErrorKind.PROVIDER_UNAVAILABLE
+        case anthropic.BadRequestError() if _is_out_of_credit(error):
+            return LLMErrorKind.NO_CREDIT
         case anthropic.APIStatusError():
             return LLMErrorKind.REQUEST_REJECTED
         case _:

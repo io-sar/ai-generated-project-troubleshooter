@@ -57,8 +57,10 @@ def reply(status: int, body: dict[str, Any]) -> Handler:
     return lambda request: httpx2.Response(status, json=body)
 
 
-def api_error(error_type: str, error_code: str | None = None) -> dict[str, Any]:
-    error: dict[str, Any] = {"type": error_type, "message": f"Provider says {CANARY}"}
+def api_error(
+    error_type: str, error_code: str | None = None, message: str = f"Provider says {CANARY}"
+) -> dict[str, Any]:
+    error: dict[str, Any] = {"type": error_type, "message": message}
     if error_code:
         error["details"] = {"error_code": error_code}
     return {"type": "error", "error": error, "request_id": "req_built"}
@@ -161,6 +163,34 @@ def test_provider_error_maps_to_its_kind(
         call(client)
 
     assert caught.value.kind is kind
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        # The texts the rate-limits docs give for a limit the key's owner set themselves.
+        "You have reached your specified API usage limits. You will regain access on ...",
+        "You have reached your specified workspace API usage limits. You will regain ...",
+        "Your credit balance is too low to access the Anthropic API.",
+    ],
+)
+def test_400_for_spend_limit_or_low_credit_means_no_credit(message: str) -> None:
+    client = make_client(reply(400, api_error("invalid_request_error", message=message)))
+
+    with pytest.raises(LLMError) as caught:
+        call(client)
+
+    assert caught.value.kind is LLMErrorKind.NO_CREDIT
+
+
+def test_other_400s_stay_request_rejected() -> None:
+    body = api_error("invalid_request_error", message="max_tokens: must be at least 1")
+    client = make_client(reply(400, body))
+
+    with pytest.raises(LLMError) as caught:
+        call(client)
+
+    assert caught.value.kind is LLMErrorKind.REQUEST_REJECTED
 
 
 def test_401_for_a_key_from_another_provider_says_so() -> None:
