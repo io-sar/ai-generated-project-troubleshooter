@@ -587,6 +587,7 @@ def test_how_this_was_built_page_renders() -> None:
         ("how.links.spec", "SPEC.md"),
         ("how.links.roadmap", "ROADMAP.md"),
         ("how.links.adrs", "docs/adr"),
+        ("how.links.prompts", "src/troubleshooter/prompts"),
         ("how.links.tests", "tests"),
         ("how.links.ci", ".github/workflows/ci.yml"),
     ],

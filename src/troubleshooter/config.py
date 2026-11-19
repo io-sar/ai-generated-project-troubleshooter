@@ -45,6 +45,9 @@ GENERATE_MAX_TOKENS = 16_000
 REPAIR_MAX_ERRORS = 20
 
 SAMPLES_DIR = Path(__file__).with_name("samples")
+PROMPTS_DIR = Path(__file__).with_name("prompts")
+# The prompt version each stage uses. A new version is a new file, so old runs stay traceable.
+PROMPT_VERSIONS = {"diagnose": "v1", "generate": "v1", "repair": "v1"}
 
 REPO_URL = "https://github.com/io-sar/ai-generated-project-troubleshooter"
 # Links point at develop until release 0.1 puts the docs on main; the roadmap's

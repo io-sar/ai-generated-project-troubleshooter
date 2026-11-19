@@ -22,10 +22,12 @@ from troubleshooter.domain.codes import (
 )
 
 SCENARIO_MAX_CHARS = 4000
+SCORE_MIN, SCORE_MAX = 0, 100
+RATING_MIN, RATING_MAX = 1, 5
 
 Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-Score = Annotated[int, Field(ge=0, le=100)]
-Rating = Annotated[int, Field(ge=1, le=5)]
+Score = Annotated[int, Field(ge=SCORE_MIN, le=SCORE_MAX)]
+Rating = Annotated[int, Field(ge=RATING_MIN, le=RATING_MAX)]
 
 # Human edits live on the report so the app and the export read one object (ADR 0005).
 # They are left out of the JSON Schema, so the LLM is never offered them.

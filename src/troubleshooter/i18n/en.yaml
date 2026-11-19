@@ -49,6 +49,7 @@ how:
     roadmap: Roadmap (milestones and status)
     board: Project board (tasks, risks and decisions)
     adrs: Architecture decision records
+    prompts: Prompts sent to the model (versioned Markdown)
     tests: Tests
     ci: CI checks
     repo: Full source code on GitHub
