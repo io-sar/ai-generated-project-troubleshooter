@@ -633,6 +633,21 @@ def test_edit_reaches_the_download_with_its_marker(exported: list[str]) -> None:
     assert "| 3 | 5 | 15 |" in risk_line
 
 
+@pytest.mark.parametrize(("table", "frame"), [("risks", 0), ("raci", 5)])
+def test_empty_added_row_is_dropped_and_never_reaches_the_download(
+    exported: list[str], table: str, frame: int
+) -> None:
+    app = run_app(sample="placeholder")
+    rows_before = len(app.dataframe[frame].value)
+    export_before = exported[-1]
+
+    edit_table(app, table, {"added_rows": [{}]})
+
+    assert not app.exception and not app.error
+    assert len(app.dataframe[frame].value) == rows_before
+    assert exported[-1] == export_before
+
+
 def test_report_offers_markdown_and_html_downloads() -> None:
     app = run_app(sample="placeholder")
 
