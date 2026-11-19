@@ -1,0 +1,58 @@
+{
+  "classification": "troubled",
+  "summary": "The project is in serious trouble. Scope has grown 47% (310 to 455 points) through 19 unpriced stories that bypassed change control, while the fixed price and the 1 March 2027 go-live with a €4,000-per-day penalty remain unchanged. At about 28 points per sprint, the remaining 315 points need roughly 11 more sprints, and 62% of the budget is spent against about 31% of the current scope delivered. The account manager has told the client the project is on track, which the facts do not support.",
+  "signals": [
+    {
+      "id": "S1",
+      "observation": "Scope has grown by 47% through unpriced stories that never went through change control.",
+      "evidence": "Total scope has grown from 310 to 455 story points. Since July the client's product owner has added 19 stories through requests made in sprint reviews. None went through change control and none were priced."
+    },
+    {
+      "id": "S2",
+      "observation": "A fixed price and a fixed go-live date leave no room for the added scope, and each day of delay carries a penalty.",
+      "evidence": "fixed-price contract of €840,000. Go-live is fixed at 1 March 2027 because a new regulation ends paper submissions on that date. The contract has a penalty of €4,000 per working day of delay."
+    },
+    {
+      "id": "S3",
+      "observation": "Remaining work is large compared with current delivery pace.",
+      "evidence": "About 140 points are done, so 315 remain. The team of seven now delivers about 28 points per two-week sprint."
+    },
+    {
+      "id": "S4",
+      "observation": "Budget consumption is well ahead of delivered progress.",
+      "evidence": "62% of the budget is spent. About 140 of 455 points are done, roughly 31% of current scope."
+    },
+    {
+      "id": "S5",
+      "observation": "The test environment needed for the treasury integration is late and the integration is blocked.",
+      "evidence": "The treasury integration needs a test environment the client promised for September. It still does not exist."
+    },
+    {
+      "id": "S6",
+      "observation": "The team is relying on sustained overtime, which is a delivery and retention risk.",
+      "evidence": "Two developers have worked over 50 hours a week for the last month."
+    },
+    {
+      "id": "S7",
+      "observation": "Stakeholders have been given an optimistic status that conflicts with the project's facts, which weakens confidence and makes later correction harder.",
+      "evidence": "Last week our account manager told the client's director that delivery is on track."
+    },
+    {
+      "id": "S8",
+      "observation": "A slow start on design and infrastructure reduced early progress.",
+      "evidence": "After a slow start on design and infrastructure, the team of seven now delivers about 28 points per two-week sprint."
+    }
+  ],
+  "things_to_watch": [
+    "Exact current date and number of working days left before 1 March 2027",
+    "Whether the client will accept a change request, re-pricing or re-baselining of the 19 added stories",
+    "Owner and committed delivery date for the test environment",
+    "Whether the treasury integration can be descoped, staged or mocked in the meantime",
+    "Cap or total exposure of the €4,000-per-day penalty",
+    "Whether the regulation deadline is firm or has any flexibility",
+    "Team retention and the risk of further burnout among the overworked developers",
+    "What the 3 December steering committee needs to decide, and what has to be ready before it",
+    "Remaining budget versus cost to complete the 315 points",
+    "Whether the mobile document upload and payment scope are essential for 1 March go-live"
+  ]
+}

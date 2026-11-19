@@ -1,0 +1,61 @@
+{
+  "classification": "troubled",
+  "summary": "The launch is at serious risk. The processor's production API, which blocks end-to-end testing and card manufacturing, has slipped twice from 30 September to a verbal 12 December, and the board expects a launch decision on 4 December, before that date. Six weeks of testing and three to four weeks of scheme certification follow the API, so the 15 January 2027 public date looks unreachable on the stated figures.",
+  "signals": [
+    {
+      "id": "S1",
+      "observation": "The processor's production API date has slipped twice and the new date is only verbal.",
+      "evidence": "The card processor was due to deliver its production issuing API by 30 September. It has slipped twice and now says 12 December, but only verbally."
+    },
+    {
+      "id": "S2",
+      "observation": "The launch depends on a processor date that has not been confirmed in writing and carries no contractual consequence if missed.",
+      "evidence": "the contract has no penalty for late delivery"
+    },
+    {
+      "id": "S3",
+      "observation": "A large sum has been paid to the processor upfront with no late-delivery protection.",
+      "evidence": "The finance team paid the processor's €95,000 integration fee upfront, and the contract has no penalty for late delivery."
+    },
+    {
+      "id": "S4",
+      "observation": "The €180,000 marketing campaign starts before the launch can be tested and certified, and cancelling it after 18 December costs 40% of the booking.",
+      "evidence": "A €180,000 marketing campaign is booked to start on 8 January, and cancelling it after 18 December costs 40% of the booking."
+    },
+    {
+      "id": "S5",
+      "observation": "Testing and certification cannot begin until the processor's API arrives, and they take about ten or more weeks, which leaves little or no slack before 15 January 2027.",
+      "evidence": "end-to-end testing of card authorisations cannot start without the processor's production API. We estimate six weeks for that testing, then three to four weeks of card scheme certification."
+    },
+    {
+      "id": "S6",
+      "observation": "Card production is blocked by the processor, with a five-week manufacturer lead time that the processor's delay directly affects.",
+      "evidence": "The card manufacturer needs the final card range details from the processor before printing, with a five-week production lead time."
+    },
+    {
+      "id": "S7",
+      "observation": "The board's decision date falls before the processor's promised delivery date, so the decision will rest on an unconfirmed date.",
+      "evidence": "The board meets on 4 December and expects a launch decision."
+    },
+    {
+      "id": "S8",
+      "observation": "The launch is publicly announced and 2,300 businesses are waiting, which raises the cost of a missed date to stakeholder confidence.",
+      "evidence": "publicly announced for 15 January 2027. There are 2,300 businesses on the waitlist."
+    },
+    {
+      "id": "S9",
+      "observation": "Eleven people are working on secondary features while the critical path is blocked, which suggests effort is not focused on the launch bottleneck.",
+      "evidence": "The team of eleven is working on secondary features to stay busy."
+    }
+  ],
+  "things_to_watch": [
+    "Get the 12 December API date confirmed in writing, with a named processor owner and what happens if it slips again.",
+    "Confirm the card scheme certification slot and how long it takes to book.",
+    "Find out whether the marketing campaign can be moved or partly cancelled before 18 December, and what the exact penalty amount is.",
+    "Decide the latest API date that still allows a 15 January launch, and whether the public date can move.",
+    "Ask the card manufacturer whether it can start printing earlier or work from provisional card range details.",
+    "Establish whether any of the secondary features are needed for launch or can be paused.",
+    "Check whether the €95,000 fee can be recovered or set against future work with the processor.",
+    "Confirm the 90% app completion figure and what remains to be built."
+  ]
+}

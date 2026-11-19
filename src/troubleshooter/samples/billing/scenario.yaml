@@ -1,0 +1,27 @@
+# Scenario written by the author. scripts/record_sample.py adds the recorded files.
+title: "Billing cutover ends in customer outages"
+badge: recorded
+scenario:
+  project_type: service_migration
+  text: >-
+    An energy retailer moved billing for 410,000 customer accounts from its on-premises
+    system to a cloud billing platform over the weekend of 7 to 9 November 2026. The plan
+    called for three full cutover rehearsals. One was completed, and the second was
+    abandoned halfway when the data load overran by 11 hours. On Sunday night the go/no-go
+    call approved the cutover with 14 open defects, two of them rated high.
+
+    The customer portal was down for nine hours on Monday. Three more outages of two to
+    three hours followed during the week, traced to database connection limits under peak
+    load. 4,200 customers were debited twice, a total of €612,000. Refunds are being
+    processed by hand at about 300 a day. Call volume tripled to 14,000 calls a day, with
+    average waits of 47 minutes. Rollback is no longer possible because meter reads since
+    Monday exist only in the new platform. The next monthly billing run, for 180,000
+    accounts, is due on 1 December. The energy regulator wants an incident report within ten
+    working days, and under the contract the vendor’s six-person hypercare team leaves on 30
+    November.
+  key_points:
+    - "Stabilise first: fix the connection limits and confirm the platform can handle peak load before 1 December"
+    - "The refund backlog takes about 14 days at the current rate, so it needs automating or more staff"
+    - "Decide whether the 1 December billing run goes ahead, and what the go/no-go criteria are"
+    - "Extend hypercare, and prepare the regulator report honestly, covering the skipped rehearsals and the go decision"
+    - "Communicate with customers and the call centre while things are being fixed"

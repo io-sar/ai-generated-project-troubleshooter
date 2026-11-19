@@ -1,0 +1,28 @@
+# Scenario written by the author. scripts/record_sample.py adds the recorded files.
+title: "Nurse rostering app on steady course"
+badge: recorded
+scenario:
+  project_type: software_delivery
+  text: >-
+    A regional hospital network with four hospitals and 2,600 nursing staff is replacing
+    spreadsheet rostering with a web and mobile rostering app. The project started in July
+    2026 with a team of eight and a budget of €1.2 million, including a 10% contingency.
+    Nine of eighteen two-week sprints are done, €610,000 is spent, and velocity has stayed
+    between 30 and 34 points. Two approved change requests grew scope by 6%, funded with
+    €38,000 of the €120,000 contingency.
+
+    The payroll integration has been in staging since October, with three open defects, none
+    critical. Union consultation on shift-swap rules ended with a signed agreement on 3
+    November. The payroll vendor plans an API upgrade in March and has confirmed in writing
+    that the current version stays supported for twelve months. One developer is on parental
+    leave from mid-December to the end of January, which was in the capacity plan from the
+    start. The steering committee met on 12 November and approved the pilot readiness
+    criteria. User acceptance testing with 24 ward managers runs from 5 to 16 January. The
+    first hospital’s pilot starts on 2 February 2027 with the rostering and shift-swap
+    features finished by January, as planned. Reporting follows in the remaining sprints,
+    with all four hospitals live by June.
+  key_points:
+    - "Should conclude the project is healthy: budget and timeline match (51% spent at 50% of sprints), velocity is stable and scope changes are controlled"
+    - "Should recognise that the risks are already handled (union agreement, vendor support in writing, planned leave) and not invent problems"
+    - "At most, light items to keep watching: the three open defects before testing, the rest of the contingency, the March API upgrade"
+    - "Next milestones to protect: testing in January and the pilot on 2 February"
